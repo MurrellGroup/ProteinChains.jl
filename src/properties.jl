@@ -18,7 +18,7 @@ function printfield(io::IO, x, field::Symbol; indent=4)
     printstyled(io, "::"; color=:red)
     printstyled(io, string(typeof(value)); color=:blue)
     printstyled(io, " = "; color=:red)
-    printstyled(io, truncate(repr(value; context=io), 120))
+    printstyled(io, truncate(repr(value; context=io), 100))
 end
 
 function printproperty(io::IO, x, property::Symbol; indent=4)
@@ -26,7 +26,7 @@ function printproperty(io::IO, x, property::Symbol; indent=4)
     print(io, "\n"*" "^indent)
     printstyled(io, ":", string(property); color=:magenta)
     printstyled(io, " => "; color=:red)
-    printstyled(io, truncate(repr(value; context=io), 120))
+    printstyled(io, truncate(repr(value; context=io), 100))
 end
 
 # TODO: `assign_property!(chain, property)` vs `assign_<property>!(chain)`

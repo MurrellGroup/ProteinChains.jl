@@ -1,3 +1,5 @@
+# TODO: store non-backbone atoms
+
 function assign_bond_lengths!(chain::ProteinChain)
     chain.bond_lengths = Backboner.get_bond_lengths(Backboner.Backbone(chain.backbone))
 end

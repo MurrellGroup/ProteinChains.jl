@@ -1,3 +1,5 @@
+using BioStructures: BioStructures, PDBFormat, MMCIFFormat
+
 const ProteinFileFormat = Union{PDBFormat, MMCIFFormat}
 const AMINOACIDS = Set("ACDEFGHIKLMNPQRSTVWY")
 const BACKBONE_ATOM_NAMES = ["N", "CA", "C"]
@@ -34,13 +36,16 @@ get_backbone(chain::BioStructures.Chain, selector) = get_backbone(BioStructures.
 aminoacid_sequence(residues::Vector{BioStructures.AbstractResidue}) = join(oneletter_resname.(residues))
 aminoacid_sequence(chain::BioStructures.Chain, selector) = aminoacid_sequence(BioStructures.collectresidues(chain, selector))
 
-function get_residue_atoms(residues::Vector{BioStructures.AbstractResidue})
-    residue_atoms = Vector{Atom}[]
-    for res in residues
-        push!(residue_atoms, Atom.(BioStructures.collectatoms(res, a -> BioStructures.standardselector(a) && !BioStructures.disorderselector(a))))
+#=function get_residue_atoms(residues::Vector{BioStructures.AbstractResidue})
+    atom_names = Vector{Vector{String}}[]
+    atom_coords = Vector{Vector{Float64}}[]
+    for residue in residues
+        residue_atoms = BioStructures.collectatoms(residue, a -> !backbone_atom_selector(a) && BioStructures.standardselector(a) && !BioStructures.disorderselector(a))
+        push!(atom_names, map(a -> a.name), residue_atoms)
+        push!(atom_coords, map(a -> a.coords), residue_atoms)
     end
-    return residue_atoms
-end
+    return atom_names, atom_coords
+end=#
 
 function ProteinChain(residues::Vector{BioStructures.AbstractResidue})
     id = only(unique(BioStructures.chainid.(residues)))
@@ -89,14 +94,14 @@ Exported formats: `PDBFormat`, `MMCIFFormat`
 
 ## Examples
 
-```jldoctest
-julia> readrecord("example.pdb"); # detects PDB format from extension
+```julia
+readrecord("example.pdb"); # detects PDB format from extension
 
-julia> readrecord("example.cif"); # detects mmCIF format from extension
+readrecord("example.cif"); # detects mmCIF format from extension
 
-julia> readrecord("example.abc", PDBFormat); # force PDB format
+readrecord("example.abc", PDBFormat); # force PDB format
 
-julia> readrecord("example.xyz", MMCIFFormat); # force mmCIF format
+readrecord("example.xyz", MMCIFFormat); # force mmCIF format
 ```
 """
 readrecord(path::AbstractString, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format))
@@ -198,5 +203,3 @@ macro pdb_str(pdbid)
         pdbentry($(esc(pdbid)))
     end
 end
-
-export @pdb_str
