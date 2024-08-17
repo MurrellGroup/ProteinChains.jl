@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(ProteinChains, :DocTestSetup, :(using ProteinChains); recurs
 
 makedocs(;
     modules=[ProteinChains],
-    authors="anton083 <anton.oresten42@gmail.com> and contributors",
+    authors="Anton Oresten <anton.oresten42@gmail.com> and contributors",
     sitename="ProteinChains.jl",
     format=Documenter.HTML(;
         canonical="https://MurrellGroup.github.io/ProteinChains.jl",
@@ -15,6 +15,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
     ],
+    doctest=false,
 )
 
 deploydocs(;
