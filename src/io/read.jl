@@ -33,7 +33,7 @@ function get_nonbackbone_atoms(residues::Vector{BioStructures.AbstractResidue})
     for residue in residues
         residue_atoms_bs = BioStructures.collectatoms(residue, a -> !backbone_atom_selector(a) && BioStructures.standardselector(a) && !BioStructures.disorderselector(a))
         @assert !isempty(residue_atoms_bs)
-        push!(atoms, map(atom_bs -> Atom(atom_bs.name, atom_bs.element, atom_bs.coords), residue_atoms_bs))
+        push!(atoms, map(atom_bs -> Atom(atom_bs.name, strip(atom_bs.element), atom_bs.coords), residue_atoms_bs))
     end
     return atoms
 end

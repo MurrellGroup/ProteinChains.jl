@@ -3,52 +3,52 @@ using OrderedCollections: OrderedDict
 export Properties
 
 struct Properties <: AbstractDict{Symbol,Any}
-    dict::OrderedDict{Symbol,Any}
+    _dict::OrderedDict{Symbol,Any}
 end
 
 Properties() = Properties(OrderedDict{Symbol,Any}())
 Properties(pairs::Vararg{<:Pair{Symbol}}) = Properties(OrderedDict(name => value for (name, value) in pairs))
 Properties(args...; kwargs...) = Properties(args..., kwargs...)
 
-Base.length(x::Properties) = length(x.dict)
-Base.iterate(x::Properties, args...) = iterate(x.dict, args...)
-Base.keys(x::Properties) = keys(x.dict)
-Base.values(x::Properties) = values(x.dict)
+Base.length(x::Properties) = length(x._dict)
+Base.iterate(x::Properties, args...) = iterate(x._dict, args...)
+Base.keys(x::Properties) = keys(x._dict)
+Base.values(x::Properties) = values(x._dict)
 
-Base.getindex(x::Properties, name::Symbol) = getindex(x.dict, name)
-Base.setindex!(x::Properties, value, name::Symbol) = setindex!(x.dict, value, name)
+Base.getindex(x::Properties, name::Symbol) = getindex(x._dict, name)
+Base.setindex!(x::Properties, value, name::Symbol) = setindex!(x._dict, value, name)
 
 Base.hasproperty(x::Properties, name::Symbol) = hasfield(Properties, name) || name in keys(x)
 Base.getproperty(x::Properties, name::Symbol) = hasfield(Properties, name) ? getfield(x, name) : getindex(x, name)
 Base.setproperty!(x::Properties, name::Symbol, value) = hasfield(Properties, name) ? setfield!(x, name, value) : setindex!(x, value, name)
 
-Base.propertynames(x::Properties, private::Bool=false) = ((private ? (:dict,) : ())..., collect(keys(x.dict))...,)
+Base.propertynames(x::Properties, private::Bool=false) = ((private ? fieldnames(Properties) : ())..., collect(keys(x._dict))...,)
 
 struct HasProperties{T}
-    parent::T
+    _parent::T
 
-    function HasProperties(parent::T) where T
-        hasfield(T, :properties) && getfield(parent, :properties) isa Properties || throw(ArgumentError("input type `$T` needs to have a properties::$(Properties) field"))
-        new{T}(parent)
+    function HasProperties(_parent::T) where T
+        hasfield(T, :properties) && getfield(_parent, :properties) isa Properties || throw(ArgumentError("input type `$T` needs to have a properties::$(Properties) field"))
+        new{T}(_parent)
     end
 end
 
-Base.hasproperty(x::HasProperties, name::Symbol) = hasfield(T, name) || hasproperty(x, name)
+Base.hasproperty(x::HasProperties{T}, name::Symbol) where T = hasfield(T, name) || hasfield(HasProperties, name) || name in keys(x._parent.properties)
 
 function Base.getproperty(x::HasProperties{T}, name::Symbol) where T
     hasfield(HasProperties, name) && return getfield(x, name)
-    hasfield(T, name) && return getfield(x.parent, name)
-    name in keys(x.parent.properties) && return getindex(x.parent.properties, name)
+    hasfield(T, name) && return getfield(x._parent, name)
+    name in keys(x._parent.properties) && return getindex(x._parent.properties, name)
     throw(ErrorException("$(T) instance has no field or property $name"))
 end
 
 function Base.setproperty!(x::HasProperties{T}, name::Symbol, value) where T
     hasfield(HasProperties, name) && return setfield(x, name, value)
-    hasfield(T, name) && return setfield!(x.parent, name, value)
-    setindex!(x.parent.properties, value, name)
+    hasfield(T, name) && return setfield!(x._parent, name, value)
+    setindex!(x._parent.properties, value, name)
 end
 
-Base.propertynames(x::HasProperties) = (fieldnames(typeof(getfield(x, :parent)))..., propertynames(x.parent.properties, false)...)
+Base.propertynames(x::HasProperties{T}, private::Bool=false) where T = ((private ? fieldnames(HasProperties) : ())..., fieldnames(T)..., propertynames(x._parent.properties, false)...)
 
 truncate(s::AbstractString, len::Integer) = length(s) > len ? String(first(s, len-1) * '…') : s
 

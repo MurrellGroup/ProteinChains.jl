@@ -22,8 +22,8 @@ using Test
         @testset "read" begin
             chains_pdb = pdbentry("1ASS"; format=PDBFormat)
             @test countresidues.(chains_pdb) == [152]
-            chains_cif = readchains("data/1ASS.cif", MMCIFFormat)
-            @test chains_pdb[1].backbone.coords == chains_cif[1].backbone.coords
+            chains_cif = pdbentry("1ASS", format=MMCIFFormat)
+            @test chains_pdb[1].backbone == chains_cif[1].backbone
         end
 
         @testset "write" begin
@@ -33,7 +33,7 @@ using Test
                 writepdb(temp_path, chains)
                 readpdb(temp_path)
             end
-            @test chains[1].backbone.coords == new_chains[1].backbone.coords
+            @test chains[1].backbone == new_chains[1].backbone
         end
 
     end
