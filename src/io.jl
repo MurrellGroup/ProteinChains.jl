@@ -86,7 +86,7 @@ const pdbextension_to_format = Dict(ext => format for (format, ext) in BioStruct
 get_format(path::AbstractString) = get(pdbextension_to_format, lowercase(last(splitext(path))[2:end]), PDBFormat)
 
 """
-    readrecord(path, format) -> chains::ProteinStructure
+    readchains(path, format) -> chains::ProteinStructure
 
 Loads a protein structure from a PDB file.
 
@@ -95,27 +95,27 @@ Exported formats: `PDBFormat`, `MMCIFFormat`
 ## Examples
 
 ```julia
-readrecord("example.pdb"); # detects PDB format from extension
+readchains("example.pdb") # detects PDB format from extension
 
-readrecord("example.cif"); # detects mmCIF format from extension
+readchains("example.cif") # detects mmCIF format from extension
 
-readrecord("example.abc", PDBFormat); # force PDB format
+readchains("example.abc", PDBFormat) # force PDB format
 
-readrecord("example.xyz", MMCIFFormat); # force mmCIF format
+readchains("example.xyz", MMCIFFormat) # force mmCIF format
 ```
 """
-readrecord(path::AbstractString, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format))
-readrecord(path::AbstractString) = readrecord(path, get_format(path))
+readchains(path::AbstractString, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format))
+readchains(path::AbstractString) = readchains(path, get_format(path))
 
 """
     readpdb(path) -> chains::Vector{ProteinChain}
 """
-readpdb(path::AbstractString) = readrecord(path, PDBFormat)
+readpdb(path::AbstractString) = readchains(path, PDBFormat)
 
 """
     readcif(path) -> chains::Vector{ProteinChain}
 """
-readcif(path::AbstractString) = readrecord(path, MMCIFFormat)
+readcif(path::AbstractString) = readchains(path, MMCIFFormat)
 
 """
     writepdb(path, chains::AbstractVector{ProteinChain})
@@ -167,14 +167,14 @@ Exported formats: `PDBFormat`, `MMCIFFormat`
 
 ## Examples
 
-```jldoctest
-julia> writechains("example.pdb", chains) # detects PDB format from extension
+```julia
+writechains("example.pdb", chains) # detects PDB format from extension
 
-julia> writechains("example.cif", chains) # detects mmCIF format from extension
+writechains("example.cif", chains) # detects mmCIF format from extension
 
-julia> writechains("example.abc", chains, PDBFormat) # force PDB format
+writechains("example.abc", chains, PDBFormat) # force PDB format
 
-julia> writechains("example.xyz", chains, MMCIFFormat) # force mmCIF format
+writechains("example.xyz", chains, MMCIFFormat) # force mmCIF format
 ```
 """
 writechains(path::AbstractString, chains::AbstractVector{ProteinChain}, ::Type{PDBFormat}) = writepdb(path, chains)
@@ -195,7 +195,7 @@ writechains(path, chain::ProteinChain, args...) = writechains(path, [chain], arg
 
 pdbentry(pdbid::AbstractString; format=BioStructures.MMCIFFormat, kwargs...) = mktempdir() do dir
     path = BioStructures.downloadpdb(pdbid; dir, format, kwargs...)
-    readrecord(path, format)
+    readchains(path, format)
 end
 
 macro pdb_str(pdbid)

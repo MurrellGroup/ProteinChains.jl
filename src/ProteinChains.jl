@@ -28,9 +28,10 @@ export assign_residue_translations!
 export assign_is_knotted!
 
 include("io.jl")
-export readrecord
+export readchains
 export readpdb
 export readcif
+export writechains
 export pdbentry, @pdb_str
 
 end
