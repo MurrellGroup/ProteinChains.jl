@@ -1,9 +1,6 @@
 # TODO: store non-backbone atoms
 
-export assign_property!
-
-export residue_indexing_function
-export ResidueIndexingUndefined
+# TODO: property tree dependency structure
 
 assign_property!(x, name::Symbol, args...) = assign_property!(x, Val(name), args...)
 
@@ -57,8 +54,10 @@ Base.showerror(io::IO, err::ResidueIndexingUndefined) = print(io, "$(typeof(err)
 
 residue_indexing_function(name::Symbol) = residue_indexing_function(Val(name))
 
+residue_indexing_function(val_name::Val) = throw(ResidueIndexingUndefined(val_name))
+
 # move non-properties to getindex(::ProteinChain)
-residue_indexing_function(::Val{:id}) = (x, i) -> x[i]
+residue_indexing_function(::Val{:id}) = (x, i) -> x
 residue_indexing_function(::Val{:sequence}) = (x, i) -> x[i]
 residue_indexing_function(::Val{:backbone}) = (x, i) -> x[:, :, i]
 residue_indexing_function(::Val{:atoms}) = (x, i) -> x[i]
@@ -67,11 +66,6 @@ residue_indexing_function(::Val{:secondary_structure}) = (x, i) -> x[i]
 residue_indexing_function(::Val{:residue_rotations}) = (x, i) -> x[:, :, i]
 residue_indexing_function(::Val{:residue_rotations_quat}) = (x, i) -> x[:, i]
 residue_indexing_function(::Val{:residue_translations}) = (x, i) -> x[:, i]
-
-residue_indexing_function(name::Val{:bond_lengths}) = throw(ResidueIndexingUndefined(name))
-residue_indexing_function(name::Val{:bond_angles}) = throw(ResidueIndexingUndefined(name))
-residue_indexing_function(name::Val{:torsion_angles}) = throw(ResidueIndexingUndefined(name))
-residue_indexing_function(name::Val{:is_knotted}) = throw(ResidueIndexingUndefined(name))
 
 flatten_property(chains::AbstractVector{<:ProteinChain}, ::Val{:sequence}) = join(chain -> chain.sequence, chains)
 

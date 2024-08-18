@@ -20,7 +20,7 @@ using Test
     @testset "PDB" begin
 
         @testset "read" begin
-            structure = pdb"1ASS"
+            chains_pdb = pdbentry("1ASS"; format=PDBFormat)
             @test countresidues.(chains_pdb) == [152]
             chains_cif = readchains("data/1ASS.cif", MMCIFFormat)
             @test chains_pdb[1].backbone.coords == chains_cif[1].backbone.coords

@@ -36,6 +36,8 @@ export readchains
 export readpdb
 export readcif
 export writechains
+export writepdb
+export PDBFormat, MMCIFFormat
 export pdbentry, @pdb_str
 
 end

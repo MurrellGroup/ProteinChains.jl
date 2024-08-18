@@ -27,16 +27,11 @@ mutable struct ProteinChain{T<:AbstractFloat}
     properties::Properties
 end
 
-function countresidues(chain::ProteinChain)
-    @assert length(chain.sequence) == size(chain.backbone, 3)
-    return length(chain.sequence)
-end
+countresidues(chain::ProteinChain) = length(chain.sequence)
 
 function ProteinChain(id::String, sequence::String, backbone::Array{T,3}, atoms::Vector{Vector{Atom{T}}}, properties::Properties) where T
-    chain = ProteinChain{T}(id, sequence, backbone, atoms, properties)
-    countresidues(chain)
     @assert size(backbone)[1:2] == (3, 3)
-    return chain
+    return ProteinChain{T}(id, sequence, backbone, atoms, properties)
 end
 
 function ProteinChain(id::String, sequence::String, backbone::Array{T,3}, atoms::Vector{Vector{Atom{T}}}=Vector{Atom{T}}[]; kwargs...) where T
@@ -49,6 +44,16 @@ Base.setproperty!(chain::ProteinChain, name::Symbol, value) = setproperty!(HasPr
 Base.propertynames(chain::ProteinChain) = propertynames(HasProperties(chain))
 
 Base.summary(chain::ProteinChain) = "$(countresidues(chain))-residue ProteinChain \"$(chain.id)\" with $(length(chain.properties)) properties"
-# where T <: Union{ProteinChain,ProteinStructure}
 
 Base.show(io::IO, ::MIME"text/plain", chain::ProteinChain) = showproperties(io, chain)
+
+function offset!(chain::ProteinChain, coords::Vector{<:Real})
+    @assert length(coords) == 3
+    chain.backbone .+= coords
+    for residue_atoms in chain.atoms
+        for atom in residue_atoms
+            offset!(atom, coords)
+        end
+    end
+    return chain
+end 

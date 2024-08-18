@@ -17,11 +17,19 @@ mutable struct Atom{T<:AbstractFloat}
     z::T
 end
 
-coords(atom::Atom) = [atom.x, atom.y, atom.z]
-
-Base.summary(atom::Atom) = "$(elements[atom.atomic_number].name) atom at [$(atom.x), $(atom.y), $(atom.z)])"
-
 Atom(atom_name::UInt32, atomic_number::Integer, x::T, y::T, z::T) where T = Atom{T}(atom_name, atomic_number, x, y, z)
 Atom(atom_name::UInt32, element_symbol::AbstractString, args...) = Atom(atom_name, element_symbol_to_atomic_number(element_symbol), args...)
 Atom(atom_name::AbstractString, args...) = Atom(encode_atom_name(atom_name), args...)
 Atom(atom_name::AbstractString, element_symbol, coords::AbstractVector{<:AbstractFloat}) = Atom(atom_name, element_symbol, coords...)
+
+coords(atom::Atom) = [atom.x, atom.y, atom.z]
+
+Base.summary(atom::Atom) = "$(elements[atom.atomic_number].name) atom at [$(atom.x), $(atom.y), $(atom.z)])"
+
+function offset!(atom::Atom, coords::Vector{<:Real})
+    @assert length(coords) == 3
+    atom.x += coords[1]
+    atom.y += coords[2]
+    atom.z += coords[3]
+    return atom
+end 
