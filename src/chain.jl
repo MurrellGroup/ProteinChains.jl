@@ -1,3 +1,10 @@
+@properties mutable struct ProteinChain{T<:AbstractFloat}
+    id::String
+    sequence::String
+    backbone::Array{T,3}
+    atoms::Vector{Vector{Atom{T}}}
+end
+
 """
     ProteinChain{T<:AbstractFloat}
 
@@ -19,13 +26,7 @@ julia> structure[1]
     modelnum::Int64 = 1
 ```
 """
-mutable struct ProteinChain{T<:AbstractFloat}
-    id::String
-    sequence::String
-    backbone::Array{T,3}
-    atoms::Vector{Vector{Atom{T}}}
-    properties::Properties
-end
+ProteinChain
 
 countresidues(chain::ProteinChain) = length(chain.sequence)
 
@@ -38,10 +39,6 @@ function ProteinChain(id::String, sequence::String, backbone::Array{T,3}, atoms:
     return ProteinChain(id, sequence, backbone, atoms, Properties(; kwargs...))
 end
 
-Base.hasproperty(chain::ProteinChain, name::Symbol) = hasproperty(HasProperties(chain), name)
-Base.getproperty(chain::ProteinChain, name::Symbol) = getproperty(HasProperties(chain), name)
-Base.setproperty!(chain::ProteinChain, name::Symbol, value) = setproperty!(HasProperties(chain), name, value)
-Base.propertynames(chain::ProteinChain) = propertynames(HasProperties(chain))
 
 Base.summary(chain::ProteinChain) = "$(countresidues(chain))-residue ProteinChain \"$(chain.id)\" with $(length(chain.properties)) properties"
 
