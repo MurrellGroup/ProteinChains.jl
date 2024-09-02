@@ -18,7 +18,7 @@ ZygoteExt = "Zygote"
 
 [compat]
 AssigningSecondaryStructure = "0.4"
-Backboner = "0.11"
+Backboner = "0.11, 0.12"
 BioStructures = "4"
 OrderedCollections = "1"
 PeriodicTable = "1"
