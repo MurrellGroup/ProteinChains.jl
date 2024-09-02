@@ -19,7 +19,7 @@ Pkg.add("ProteinChains")
 ```julia
 julia> using ProteinChains
 
-julia> structure = pdb"1EYE"; # convenient macro to download proteins from the PDB
+julia> structure = pdb"1EYE" # convenient macro to download proteins from the PDB
 [ Info: Downloading file from PDB: 1EYE
 1-chain ProteinStructure "1EYE.cif":
   2 fields:
