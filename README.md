@@ -21,7 +21,7 @@ julia> using ProteinChains
 
 julia> structure = pdb"1EYE"; # convenient macro to download proteins from the PDB
 [ Info: Downloading file from PDB: 1EYE
-1-chain ProteinStructure "1EYE.cif" with 2 dynamic properties:
+1-chain ProteinStructure "1EYE.cif":
   2 fields:
     name::String = "1EYE.cif"
     chains::Vector{ProteinChain{Float64}} = <exceeds max length>
@@ -29,8 +29,8 @@ julia> structure = pdb"1EYE"; # convenient macro to download proteins from the P
     ids::Vector{String} = ["A"]
     lengths::Vector{Int64} = [253]
 
-julia> chain = structure[1]
-253-residue ProteinChain "A" with 2 dynamic properties:
+julia> chain = structure["A"]
+253-residue ProteinChain "A":
   4 fields:
     id::String = "A"
     sequence::String = <exceeds max length>
@@ -46,9 +46,7 @@ julia> chain.numbering
    6
    7
    8
-   9
    ⋮
- 270
  271
  272
  273
