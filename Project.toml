@@ -7,22 +7,15 @@ version = "0.0.1"
 AssigningSecondaryStructure = "8ed43e74-60fb-4e11-99b9-91deed37aef7"
 Backboner = "9ac9c2a2-1cfe-46d3-b3fd-6fa470ea56a7"
 BioStructures = "de9282ab-8554-53be-b2d6-f6c222edabfc"
-OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+DynamicStructs = "e139c391-eeee-4818-b359-c8725224fb1f"
 PeriodicTable = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
 
-[weakdeps]
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-
-[extensions]
-ZygoteExt = "Zygote"
-
 [compat]
-AssigningSecondaryStructure = "0.4"
-Backboner = "0.11"
+AssigningSecondaryStructure = "0.5"
+Backboner = "0.12"
 BioStructures = "4"
-OrderedCollections = "1"
+DynamicStructs = "0.1"
 PeriodicTable = "1"
-Zygote = "0.6"
 julia = "1"
 
 [extras]

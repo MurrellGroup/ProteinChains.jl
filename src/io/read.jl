@@ -33,7 +33,7 @@ function get_nonbackbone_atoms(residues::Vector{BioStructures.AbstractResidue})
     for residue in residues
         residue_atoms_bs = BioStructures.collectatoms(residue, a -> !backbone_atom_selector(a) && BioStructures.standardselector(a) && !BioStructures.disorderselector(a))
         @assert !isempty(residue_atoms_bs)
-        push!(atoms, map(atom_bs -> Atom(atom_bs.name, strip(atom_bs.element), atom_bs.coords), residue_atoms_bs))
+        push!(atoms, map(atom_bs -> Atom(atom_bs.name, atom_bs.element, atom_bs.coords), residue_atoms_bs))
     end
     return atoms
 end
@@ -45,7 +45,6 @@ function ProteinChain(residues::Vector{BioStructures.AbstractResidue})
     atoms = get_nonbackbone_atoms(residues)
     numbering = BioStructures.resnumber.(residues)
     modelnum = only(unique(BioStructures.modelnumber.(residues)))
-    #ins_codes = BioStructures.inscode.(residues)
     return ProteinChain(id, sequence, backbone, atoms; numbering, modelnum)
 end
 
@@ -55,7 +54,7 @@ function ProteinChain(chain::BioStructures.Chain, selector=backbone_residue_sele
     return ProteinChain(residues)
 end
 
-function ProteinStructure(struc::BioStructures.MolecularStructure, selector=backbone_residue_selector)
+function ProteinStructure(struc::BioStructures.MolecularStructure, selector=backbone_residue_selector; path=nothing)
     name = struc.name
     chains = ProteinChain{Float64}[]
     for model in struc, chain in model
@@ -64,5 +63,13 @@ function ProteinStructure(struc::BioStructures.MolecularStructure, selector=back
             countresidues(pc) > 0 && push!(chains, pc)
         end
     end
-    ProteinStructure(name, chains)
+    structure = ProteinStructure(name, chains; ids=map(chain -> chain.id, chains), lengths=map(countresidues, chains))
+    !isnothing(path) && endswith(path, ".cif") && renumber!(structure, BioStructures.MMCIFDict(path))
+    return structure
 end
+
+readchains(path::AbstractString, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format); path)
+readchains(path::AbstractString) = readchains(path, get_format(path))
+
+readpdb(path::AbstractString) = readchains(path, PDBFormat)
+readcif(path::AbstractString) = readchains(path, MMCIFFormat)

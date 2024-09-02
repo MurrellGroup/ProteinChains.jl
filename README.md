@@ -13,3 +13,49 @@ This Julia package provides implements the `ProteinChain` type: an efficient and
 using Pkg
 Pkg.add("ProteinChains")
 ```
+
+## Examples
+
+```julia
+julia> using ProteinChains
+
+julia> structure = pdb"1EYE"; # convenient macro to download proteins from the PDB
+[ Info: Downloading file from PDB: 1EYE
+1-chain ProteinStructure "1EYE.cif" with 2 dynamic properties:
+  2 fields:
+    name::String = "1EYE.cif"
+    chains::Vector{ProteinChain{Float64}} = <exceeds max length>
+  2 properties:
+    ids::Vector{String} = ["A"]
+    lengths::Vector{Int64} = [253]
+
+julia> chain = structure[1]
+253-residue ProteinChain "A" with 2 dynamic properties:
+  4 fields:
+    id::String = "A"
+    sequence::String = <exceeds max length>
+    backbone::Array{Float64,3} = <exceeds max length>
+    atoms::Vector{Vector{ProteinChains.Atom{Float64}}} = <exceeds max length>
+  2 properties:
+    numbering::Vector{Int64} = <exceeds max length>
+    modelnum::Int64 = 1
+
+julia> chain.numbering
+253-element Vector{Int64}:
+   5
+   6
+   7
+   8
+   9
+   ⋮
+ 270
+ 271
+ 272
+ 273
+ 274
+```
+
+## See also
+- [Backboner.jl](https://github.com/MurrellGroup/Backboner.jl)
+- [BioStructures.jl](https://github.com/BioJulia/BioStructures.jl)
+- [PDBTools.jl](https://github.com/m3g/PDBTools.jl)

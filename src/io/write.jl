@@ -1,52 +1,67 @@
-readchains(path::AbstractString, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format))
-readchains(path::AbstractString) = readchains(path, get_format(path))
-
-readpdb(path::AbstractString) = readchains(path, PDBFormat)
-readcif(path::AbstractString) = readchains(path, MMCIFFormat)
-
-function writepdb(path::AbstractString, chains::AbstractVector{ProteinChain{T}}) where T
-    atom_records = BioStructures.AtomRecord[]
-    index = 0
-    residue_index_global = 0
-    for chain in chains
-        numbering = hasproperty(chain, :numbering) ? chain.numbering : collect(1:countresidues(chain))
-        for residue_index in 1:countresidues(chain)
-            resname = get(threeletter_aa_names, chain.sequence[residue_index], "XXX") # threletter_aa_names in residue.jl
-            residue_index_global += 1
-            residue_atoms = [
-                [Atom(atom_name, atom_symbol, coords) for (atom_name, atom_symbol, coords) in zip(BACKBONE_ATOM_NAMES, BACKBONE_ATOM_SYMBOLS, eachcol(view(chain.backbone, :, :, residue_index)))];
-                chain.atoms[residue_index]
-            ]
-            for atom in residue_atoms
-                index += 1
-                push!(atom_records, BioStructures.AtomRecord(false, index, decode_atom_name(atom.atom_name), ' ', resname, chain.id,
-                    numbering[residue_index], ' ', [atom.x, atom.y, atom.z], 1.0, 0.0, atomic_number_to_element_symbol(atom.atomic_number), ""))
-            end
+function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Model)
+    numbering = hasproperty(proteinchain, :numbering) ? proteinchain.numbering : collect(1:countresidues(proteinchain))
+    residue_list = Vector{String}()
+    residues = Dict{String, BioStructures.AbstractResidue}()
+    chain = BioStructures.Chain(proteinchain.id, residue_list, residues, model)
+    atom_serial = 0
+    for residue_index in 1:countresidues(proteinchain)
+        atom_list = Vector{String}()
+        atoms = Dict{String, BioStructures.AbstractAtom}()
+        resname = threeletter_resname(proteinchain.sequence[residue_index])
+        number = numbering[residue_index]
+        residue = BioStructures.Residue(resname, number, ' ', false, atom_list, atoms, chain, '-') # TODO: secondary structure
+        for (i, (atom_name, element)) in enumerate(zip(BACKBONE_ATOM_NAMES, BACKBONE_ATOM_SYMBOLS))
+            atom_serial += 1
+            coords = proteinchain.backbone[:, i, residue_index]
+            atom = BioStructures.Atom(atom_serial, atom_name, ' ', coords, 1.0, 0.0, element, "  ", residue)
+            push!(atom_list, atom.name)
+            atoms[atom.name] = atom
         end
+        for atom in proteinchain.atoms[residue_index]
+            atom_serial += 1
+            atom_name = decode_atom_name(atom.atom_name)
+            coords = [atom.x, atom.y, atom.z]
+            element = atomic_number_to_element_symbol(atom.atomic_number)
+            atom = BioStructures.Atom(atom_serial, atom_name, ' ', coords, 1.0, 0.0, element, "  ", residue)
+            push!(atom_list, atom.name)
+            atoms[atom.name] = atom
+        end
+        key = string(residue.number)
+        push!(residue_list, key)
+        residues[key] = residue
     end
-    pdblines = BioStructures.pdbline.(atom_records)
-    open(path, "w") do io
-        for line in pdblines
-            println(io, line)
-        end
+    return chain
+end
+
+function BioStructures.MolecularStructure(proteinstruc::ProteinStructure)
+    models = Dict{Int64, BioStructures.Model}()
+    struc = BioStructures.MolecularStructure(proteinstruc.name, models)
+    for proteinchain in proteinstruc
+        modelnum = hasproperty(proteinchain, :modelnum) ? proteinchain.modelnum : 1
+        modelnum in keys(models) || (models[modelnum] = BioStructures.Model(modelnum, Dict{String, BioStructures.Chain}(), struc))
+        model = models[modelnum]
+        model.chains[proteinchain.id] = BioStructures.Chain(proteinchain, model)
+    end
+    return struc
+end
+
+function writechains(path::AbstractString, proteinstruc::ProteinStructure, format::Type{<:ProteinFileFormat})
+    struc = BioStructures.MolecularStructure(proteinstruc)
+    if format == MMCIFFormat
+        BioStructures.writemmcif(path, struc)
+    elseif format == PDBFormat
+        BioStructures.writepdb(path, struc)
+    else
+        error("Unsupported format: $format")
     end
     return nothing
 end
 
-writepdb(path::AbstractString, chain::ProteinChain) = writepdb(path, [chain])
-
-writechains(path::AbstractString, chains::AbstractVector{<:ProteinChain}, ::Type{PDBFormat}) = writepdb(path, chains)
-
-function writechains(path::AbstractString, chains::AbstractVector{<:ProteinChain}, format::Type{<:ProteinFileFormat})
-    struc = mktempdir() do temp_dir
-        temp_path = joinpath(temp_dir, "temp.pdb")
-        writechains(temp_path, chains, PDBFormat)
-        read(temp_path, PDBFormat) # loads BioStructures.MolecularStructure
-    end
-    write_function = format == PDBFormat ? BioStructures.writepdb : BioStructures.writemmcif
-    write_function(path, struc)
+function writechains(path::AbstractString, proteinchains::AbstractVector{<:ProteinChain}, format)
+    proteinstruc = ProteinStructure(basename(path), proteinchains)
+    writechains(path, proteinstruc, format)
 end
 
-writechains(path::AbstractString, chains::AbstractVector{<:ProteinChain}) = writechains(path, chains, get_format(path))
+writechains(path::AbstractString, proteinchain::ProteinChain, format) = writechains(path, [proteinchain], format)
 
-writechains(path, chain::ProteinChain, args...) = writechains(path, [chain], args...)
+writechains(path::AbstractString, arg) = writechains(path, arg, get_format(path))

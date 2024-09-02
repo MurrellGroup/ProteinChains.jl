@@ -1,14 +1,19 @@
-import AssigningSecondaryStructure as ASS
+import AssigningSecondaryStructure: assign_secondary_structure!, assign_secondary_structure
+
+export assign_secondary_structure!
 
 const SS_CODES = ['-', 'H', 'E']
 
 number_vector_to_codes(v::AbstractVector{<:Integer}) = SS_CODES[v]
 number_vector_to_code_string(v::AbstractVector{<:Integer}) = join(SS_CODES)[v]
 
-function ASS.assign_secondary_structure(structure::AbstractVector{<:ProteinChain})
-    chains = collect(structure)
-    backbones = map(chain -> chain.backbone, chains)
-    return Dict(zip(chains, ASS.assign_secondary_structure(backbones)))
+function assign_secondary_structure!(chain::ProteinChain)
+    number_vector = assign_secondary_structure(chain.backbone)
+    chain.secondary_structure = number_vector_to_code_string(number_vector)
+    return chain
 end
 
-ASS.assign_secondary_structure(chain::ProteinChain) = ASS.assign_secondary_structure([chain])[chain]
+function assign_secondary_structure!(structure::AbstractVector{<:ProteinChain})
+    assign_secondary_structure!.(structure)
+    return structure
+end

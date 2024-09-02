@@ -17,7 +17,7 @@ Base.@kwdef struct BackboneGeometry
     C_N_length = 1.33
 
     N_Ca_C_angle = 1.94
-    Ca_C_N_angle = 2.03
+    Ca_C_N_angle = 2.04
     C_N_Ca_angle = 2.13
 end
 
@@ -26,21 +26,27 @@ const DEFAULT_BACKBONE_GEOMETRY = BackboneGeometry()
 """
     IdealResidue{T<:AbstractFloat} <: AbstractMatrix{T}
 
-    IdealResidue{T}(backbone_geometry::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY)
+    IdealResidue{T}(backbone_geometry=DEFAULT_BACKBONE_GEOMETRY; template=nothing) where T
+
+A 3x3 matrix representing the idealized geometry of a protein residue, with columns representing
+the N, Ca, and C atom positions of a residue positioned at the origin.
 """
 struct IdealResidue{T<:AbstractFloat} <: AbstractMatrix{T}
     backbone_geometry::BackboneGeometry
     N_Ca_C_coords::Matrix{T}
 
-    function IdealResidue{T}(backbone_geometry::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY) where T
+    function IdealResidue{T}(backbone_geometry::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY; template=nothing) where T
         N_Ca_C_coords = Matrix{T}(undef, 3, 3)
         N_pos, Ca_pos, C_pos = eachcol(N_Ca_C_coords)
         Θ = backbone_geometry.N_Ca_C_angle - π/2
         N_pos .= [0, 0, 0]
         Ca_pos .= [backbone_geometry.N_Ca_length, 0, 0]
         C_pos .= Ca_pos + backbone_geometry.Ca_C_length * [sin(Θ), cos(Θ), 0]
-        centroid = (N_pos + Ca_pos + C_pos) / 3
-        N_Ca_C_coords .-= centroid
+        N_Ca_C_coords .-= Backboner.centroid(N_Ca_C_coords; dims=2)
+        if !isnothing(template)
+            wanted_orientation, current_offset, wanted_offset = Backboner.kabsch_algorithm(N_Ca_C_coords, template)
+            N_Ca_C_coords .= wanted_orientation * (N_Ca_C_coords .- current_offset) .+ wanted_offset
+        end
         new{T}(backbone_geometry, N_Ca_C_coords)
     end
 end
@@ -48,18 +54,36 @@ end
 Base.size(::IdealResidue) = (3,3)
 Base.getindex(ideal_residue::IdealResidue, args...) = ideal_residue.N_Ca_C_coords[args...]
 
-const DEFAULT_IDEAL_RESIDUE = IdealResidue{Float64}()
+"""
+    STANDARD_RESIDUE_TEMPLATE
 
-const OLD_STANDARD_RESIDUE_ANGSTROM = [
+This is a template of a "standard residue", with a very specific and
+distinct shape, size, and orientation. which needs to be consistent if we want to
+represent protein structures as sets of residue rotations and translations.
+
+Thus, we can use this residue as a template for aligning other residues with very precise
+geometry to it.
+
+```jldocotest
+julia> IdealResidue{Float64}(BackboneGeometry(N_Ca_C_angle = 1.93); template=ProteinChains.STANDARD_RESIDUE)
+3×3 IdealResidue{Float64}:
+ -1.06447   -0.199174   1.26364
+  0.646303  -0.529648  -0.116655
+  0.0        0.0        0.0
+```
+"""
+const STANDARD_RESIDUE_TEMPLATE = [
     -1.066  -0.200   1.266;
      0.645  -0.527  -0.118;
      0.000   0.000   0.000;
 ] #  N       Ca      Cs
 
+const STANDARD_RESIDUE = IdealResidue{Float64}(DEFAULT_BACKBONE_GEOMETRY; template=STANDARD_RESIDUE_TEMPLATE)
+
 """
     append_residue(Backbone::Backbone, torsion_angles::Vector{<:Real}; ideal::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY)
 
-Create a new backbone by appending 3 torsion angles (ψ, ω, ϕ) at the end, using bond lengths and bond angles specified in BackboneGeometry.
+Create a new backbone by appending 3 new torsion angles (ψ, ω, ϕ) at the end, using bond lengths and bond angles specified in `BackboneGeometry`.
 """
 function append_residue(backbone::Backbone, torsion_angles::Vector{<:Real}; ideal::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY)
     length(torsion_angles) == 3 || throw(ArgumentError("length of `torsion_angles` must be 3, as only 3 backbone atoms are introduced."))
@@ -71,7 +95,7 @@ end
 """
     append_residue(Backbone::Backbone, torsion_angles::Vector{<:Real}; ideal::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY)
 
-Create a new backbone by prepending 3 torsion angles (ψ, ω, ϕ) at the end, using bond lengths and bond angles specified in BackboneGeometry.
+Create a new backbone by prepending 3 new torsion angles (ψ, ω, ϕ) at the beginning, using bond lengths and bond angles specified in the `BackboneGeometry`.
 
 !!! note
     The torsion angle order is the same as it would be when appending. The order is *not* reversed.
