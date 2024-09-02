@@ -17,7 +17,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteExt = "Zygote"
 
 [compat]
-AssigningSecondaryStructure = "0.4"
+AssigningSecondaryStructure = "0.4, 0.5"
 Backboner = "0.11"
 BioStructures = "4"
 OrderedCollections = "1"
