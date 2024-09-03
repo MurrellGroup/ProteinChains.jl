@@ -12,6 +12,7 @@ using Test
     @testset "ProteinStructure" begin
         chain = ProteinChain("A", "AMINO", rand(3, 3, 5), [ProteinChains.Atom{Float64}[] for _ in 1:5])
         structure = ProteinStructure("1CHN", [chain])
+        @test structure[1] === chain
         @test structure["A"] === chain
     end
 
@@ -19,7 +20,7 @@ using Test
 
         @testset "read" begin
             chains_pdb = pdbentry("1ASS"; format=PDBFormat)
-            @test countresidues.(chains_pdb) == [152]
+            @test countresidues.(collect(chains_pdb)) == [152]
             chains_cif = pdbentry("1ASS"; format=MMCIFFormat)
             @test chains_pdb[1].backbone == chains_cif[1].backbone
         end
@@ -39,7 +40,7 @@ using Test
     @testset "secondary structure" begin
         ss_composition(chain::ProteinChain) = [count(==(ss), chain.secondary_structure) for ss in ['-', 'H', 'E']]
         structure = assign_secondary_structure!(pdb"1ZAK")
-        @test ss_composition.(structure) == [[72, 116, 32], [72, 116, 32]]
+        @test ss_composition.(collect(structure)) == [[72, 116, 32], [72, 116, 32]]
     end
 
 end

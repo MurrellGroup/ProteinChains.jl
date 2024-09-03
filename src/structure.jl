@@ -9,7 +9,7 @@ end
 ## Examples
 
 ```jldoctest
-julia> structure = pdb"1EYE"
+julia> pdb"1EYE"
 1-chain ProteinStructure "1EYE.cif" with 2 dynamic properties:
   2 fields:
     name::String = "1EYE.cif"
@@ -17,19 +17,16 @@ julia> structure = pdb"1EYE"
   2 properties:
     ids::Vector{String} = ["A"]
     lengths::Vector{Int64} = [253]
-
-julia> structure["A"] isa ProteinChain
-true
 ```
 """
 ProteinStructure
 
 Base.size(structure::ProteinStructure) = (length(structure.chains),)
-Base.axes(structure::ProteinStructure) = ([chain.id for chain in structure.chains],)
-Base.getindex(structure::ProteinStructure, id::AbstractString) = structure.chains[findfirst(c -> c.id == id, structure.chains)]
-Base.collect(structure::ProteinStructure) = structure.chains
+Base.getindex(structure::ProteinStructure, i) = structure.chains[i]
 
-Base.summary(structure::ProteinStructure) = "$(length(structure))-chain ProteinStructure \"$(structure.name)\""
+Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[findfirst(c -> c.id == id, structure.chains)]
+
+Base.summary(structure::ProteinStructure) = "$(length(structure))-chain ProteinStructure \"$(structure.name)\" with $(length(getproperties(structure; fields=false))) dynamic properties"
 
 function offset!(structure::ProteinStructure, coords::Vector{<:Real})
     @assert length(coords) == 3
