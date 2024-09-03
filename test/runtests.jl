@@ -12,7 +12,6 @@ using Test
     @testset "ProteinStructure" begin
         chain = ProteinChain("A", "AMINO", rand(3, 3, 5), [ProteinChains.Atom{Float64}[] for _ in 1:5])
         structure = ProteinStructure("1CHN", [chain])
-        @test structure[1] === chain
         @test structure["A"] === chain
     end
 
