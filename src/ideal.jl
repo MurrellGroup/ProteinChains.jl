@@ -76,7 +76,7 @@ const STANDARD_RESIDUE_TEMPLATE = [
     -1.066  -0.200   1.266;
      0.645  -0.527  -0.118;
      0.000   0.000   0.000;
-] #  N       Ca      Cs
+] #  N       Ca      C
 
 const STANDARD_RESIDUE = IdealResidue{Float64}(DEFAULT_BACKBONE_GEOMETRY; template=STANDARD_RESIDUE_TEMPLATE)
 

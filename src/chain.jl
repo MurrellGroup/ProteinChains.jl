@@ -41,4 +41,15 @@ function offset!(chain::ProteinChain, coords::Vector{<:Real})
         end
     end
     return chain
-end 
+end
+
+import Backboner
+
+Backboner.Backbone(chain::ProteinChain) = Backbone(chain.backbone)
+Backboner.ChainedBonds(chain::ProteinChain) = ChainedBonds(Backbone(chain))
+Backboner.Frames(chain::ProteinChain, ideal_residue=STANDARD_RESIDUE) = Frames(Backbone(chain), ideal_residue)
+
+# TODO: "contiguity" field/property to mask outputs with NaN where residues are not contiguous
+psi_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[1:3:end]
+omega_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[2:3:end]
+phi_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[3:3:end]
