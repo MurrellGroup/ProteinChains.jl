@@ -1,8 +1,29 @@
+using LinearAlgebra: cross, normalize
+
+using AssigningSecondaryStructure: get_oxygen_positions
+
+function estimate_last_oxygen_position(backbone::Array{T,3}) where T<:Real
+    N_pos, Ca_pos, C_pos = eachcol(backbone[:,:,end])
+    angle = 2π/3
+    bond_length = 1.2
+    v = Ca_pos - C_pos
+    w = cross(v, Ca_pos - N_pos)
+    u = cross(w, v)
+    O_pos = C_pos + normalize(u)*bond_length*cos(angle - 0.5π) - normalize(v)*bond_length*sin(angle - 0.5π)
+    return O_pos
+end
+
 function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Model)
     numbering = hasproperty(proteinchain, :numbering) ? proteinchain.numbering : collect(1:countresidues(proteinchain))
     residue_list = Vector{String}()
     residues = Dict{String, BioStructures.AbstractResidue}()
     chain = BioStructures.Chain(proteinchain.id, residue_list, residues, model)
+
+    # some visualization tools require oxygen atoms to be present, so these get used if a residue is missing the oxygen atom
+    oxygen_name = encode_atom_name("O", "O")
+    oxygen_coords = get_oxygen_positions(proteinchain.backbone)
+    oxygen_coords[:,end] = estimate_last_oxygen_position(proteinchain.backbone)
+
     atom_serial = 0
     for residue_index in 1:countresidues(proteinchain)
         atom_list = Vector{String}()
@@ -10,6 +31,7 @@ function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Mo
         resname = threeletter_resname(proteinchain.sequence[residue_index])
         number = numbering[residue_index]
         residue = BioStructures.Residue(resname, number, ' ', false, atom_list, atoms, chain, '-') # TODO: secondary structure
+
         for (i, (atom_name, element)) in enumerate(zip(BACKBONE_ATOM_NAMES, BACKBONE_ATOM_SYMBOLS))
             atom_serial += 1
             coords = proteinchain.backbone[:, i, residue_index]
@@ -17,6 +39,15 @@ function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Mo
             push!(atom_list, atom.name)
             atoms[atom.name] = atom
         end
+
+        if !any(atom -> atom.atom_name == oxygen_name, proteinchain.atoms[residue_index])
+            atom_serial += 1
+            coords = oxygen_coords[:, residue_index]
+            atom = BioStructures.Atom(atom_serial, "O", ' ', coords, 1.0, 0.0, "O", "  ", residue)
+            push!(atom_list, atom.name)
+            atoms[atom.name] = atom
+        end
+
         for atom in proteinchain.atoms[residue_index]
             atom_serial += 1
             atom_name = decode_atom_name(atom.atom_name)
