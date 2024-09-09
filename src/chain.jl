@@ -30,6 +30,8 @@ ProteinChain
 
 countresidues(chain::ProteinChain) = length(chain.sequence)
 
+Base.getindex(chain::ProteinChain, i::AbstractVector{<:Integer}) = ProteinChain(chain.id, chain.sequence[i], chain.backbone[:,:,i], chain.atoms[i])
+
 Base.summary(chain::ProteinChain) = "$(countresidues(chain))-residue ProteinChain \"$(chain.id)\""
 
 function offset!(chain::ProteinChain, coords::Vector{<:Real})

@@ -7,6 +7,7 @@ using Test
         chain = ProteinChain("A", "AMINO", rand(3, 3, 5), [ProteinChains.Atom{Float64}[] for _ in 1:5]; modelnum=1)
         @test countresidues(chain) == 5
         @test summary(chain) == "5-residue ProteinChain \"A\""
+        @test chain[5:-1:1] == ProteinChain("A", "ONIMA", chain.backbone[:,:,5:-1:1], chain.atoms[5:-1:1])
     end
 
     @testset "ProteinStructure" begin
