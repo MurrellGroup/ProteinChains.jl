@@ -17,12 +17,4 @@ get_format(path::AbstractString) = get(pdbextension_to_format, lowercase(last(sp
 include("renumber.jl")
 include("read.jl")
 include("write.jl")
-
-pdbentry(pdbid::AbstractString; format=BioStructures.MMCIFFormat, kwargs...) = mktempdir() do dir
-    path = BioStructures.downloadpdb(pdbid; dir, format, kwargs...)
-    readchains(path, format)
-end
-
-macro pdb_str(pdbid::AbstractString)
-    :(pdbentry($(esc(pdbid))))
-end
+include("download.jl")

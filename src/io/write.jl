@@ -13,8 +13,8 @@ function estimate_last_oxygen_position(backbone::Array{T,3}) where T<:Real
     return O_pos
 end
 
-function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Model)
-    numbering = hasproperty(proteinchain, :numbering) ? proteinchain.numbering : collect(1:countresidues(proteinchain))
+function BioStructures.Chain(proteinchain::AbstractProteinChain, model::BioStructures.Model)
+    numbering = proteinchain.numbering
     residue_list = Vector{String}()
     residues = Dict{String, BioStructures.AbstractResidue}()
     chain = BioStructures.Chain(proteinchain.id, residue_list, residues, model)
@@ -25,22 +25,22 @@ function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Mo
     oxygen_coords[:,end] = estimate_last_oxygen_position(proteinchain.backbone)
 
     atom_serial = 0
-    for residue_index in 1:countresidues(proteinchain)
+    for residue_index in 1:length(proteinchain)
         atom_list = Vector{String}()
         atoms = Dict{String, BioStructures.AbstractAtom}()
         resname = threeletter_resname(proteinchain.sequence[residue_index])
         number = numbering[residue_index]
         residue = BioStructures.Residue(resname, number, ' ', false, atom_list, atoms, chain, '-') # TODO: secondary structure
 
-        for (i, (atom_name, element)) in enumerate(zip(BACKBONE_ATOM_NAMES, BACKBONE_ATOM_SYMBOLS))
+        for (i, (name, element)) in enumerate(zip(BACKBONE_ATOM_NAMES, BACKBONE_ATOM_SYMBOLS))
             atom_serial += 1
             coords = proteinchain.backbone[:, i, residue_index]
-            atom = BioStructures.Atom(atom_serial, atom_name, ' ', coords, 1.0, 0.0, element, "  ", residue)
+            atom = BioStructures.Atom(atom_serial, name, ' ', coords, 1.0, 0.0, element, "  ", residue)
             push!(atom_list, atom.name)
             atoms[atom.name] = atom
         end
 
-        if !any(atom -> atom.atom_name == oxygen_name, proteinchain.atoms[residue_index])
+        if !any(atom -> atom.name == oxygen_name, proteinchain.atoms[residue_index])
             atom_serial += 1
             coords = oxygen_coords[:, residue_index]
             atom = BioStructures.Atom(atom_serial, "O", ' ', coords, 1.0, 0.0, "O", "  ", residue)
@@ -50,10 +50,10 @@ function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Mo
 
         for atom in proteinchain.atoms[residue_index]
             atom_serial += 1
-            atom_name = decode_atom_name(atom.atom_name)
+            name = decode_atom_name(atom.name)
             coords = [atom.x, atom.y, atom.z]
             element = atomic_number_to_element_symbol(atom.atomic_number)
-            atom = BioStructures.Atom(atom_serial, atom_name, ' ', coords, 1.0, 0.0, element, "  ", residue)
+            atom = BioStructures.Atom(atom_serial, name, ' ', coords, 1.0, 0.0, element, "  ", residue)
             push!(atom_list, atom.name)
             atoms[atom.name] = atom
         end
@@ -76,7 +76,7 @@ function BioStructures.MolecularStructure(proteinstruc::ProteinStructure)
     return struc
 end
 
-function writechains(path::AbstractString, proteinstruc::ProteinStructure, format::Type{<:ProteinFileFormat})
+function Base.write(path::AbstractString, proteinstruc::ProteinStructure, format::Type{<:ProteinFileFormat})
     struc = BioStructures.MolecularStructure(proteinstruc)
     if format == MMCIFFormat
         BioStructures.writemmcif(path, struc)
@@ -88,11 +88,12 @@ function writechains(path::AbstractString, proteinstruc::ProteinStructure, forma
     return nothing
 end
 
-function writechains(path::AbstractString, proteinchains::AbstractVector{<:ProteinChain}, format)
+function Base.write(path::AbstractString, proteinchains::AbstractVector{<:AbstractProteinChain}, format=get_format(path))
     proteinstruc = ProteinStructure(basename(path), proteinchains)
-    writechains(path, proteinstruc, format)
+    write(path, proteinstruc, format)
 end
 
-writechains(path::AbstractString, proteinchain::ProteinChain, format) = writechains(path, [proteinchain], format)
+Base.write(path::AbstractString, proteinchain::AbstractProteinChain, format=get_format(path)) = write(path, [proteinchain], format)
 
-writechains(path::AbstractString, arg) = writechains(path, arg, get_format(path))
+writecif(path::AbstractString, x) = write(path, x, MMCIFFormat)
+writepdb(path::AbstractString, x) = write(path, x, PDBFormat)

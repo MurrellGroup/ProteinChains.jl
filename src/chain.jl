@@ -1,41 +1,53 @@
-@dynamic mutable struct ProteinChain{T<:AbstractFloat}
+"""
+    AbstractProteinChain{T<:AbstractFloat}
+
+An abstract type representing a protein chain, with a type parameter
+`T` that specifies the floating-point type of the coordinates.
+
+## Subtypes
+- `ProteinChain{T}`: A concrete subtype of `AbstractProteinChain` that represents a protein chain with a spe.
+"""
+abstract type AbstractProteinChain{T<:AbstractFloat} end
+
+Base.summary(chain::AbstractProteinChain) = "$(length(chain))-residue $(typeof(chain)) ($(chain.id))"
+Base.length(chain::AbstractProteinChain) = size(chain.backbone, 3)
+
+mutable struct ProteinChain{T} <: AbstractProteinChain{T}
     id::String
     sequence::String
     backbone::Array{T,3}
+    numbering::Vector{Int}
     atoms::Vector{Vector{Atom{T}}}
+
+    function ProteinChain(
+        id::AbstractString, sequence::AbstractString, backbone::AbstractArray{T,3},
+        numbering::AbstractVector{<:Integer} = collect(1:length(sequence)),
+        atoms::Vector{Vector{Atom{T}}} = [Atom{T}[] for _ in sequence],
+    ) where T
+        @assert length(sequence) == size(backbone, 3) == length(numbering) == length(atoms)
+        new{T}(id, sequence, backbone, numbering, atoms)
+    end
 end
 
 """
     ProteinChain{T<:AbstractFloat}
-
-## Examples
-
-```jldoctest
-julia> structure = pdb"1EYE";
-[ Info: Downloading file from PDB: 1EYE
-
-julia> structure[1]
-253-residue ProteinChain "A":
-  4 fields:
-    id::String = "A"
-    sequence::String = <field value exceeds max length>
-    backbone::Array{Float64,3} = <field value exceeds max length>
-    atoms::Vector{Vector{ProteinChains.Atom{Float64}}} = <field value exceeds max length>
-  2 properties:
-    numbering::Vector{Int64} = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14  …  265, 266, 267, 268, 269, 270, 271, 272, 273, 274]
-    modelnum::Int64 = 1
-```
 """
 ProteinChain
 
-countresidues(chain::ProteinChain) = length(chain.sequence)
+Base.getindex(chain::ProteinChain, i::AbstractVector{<:Integer}) =
+    ProteinChain(chain.id, chain.sequence[i], chain.backbone[:,:,i], chain.numbering[i], chain.atoms[i])
 
-Base.getindex(chain::ProteinChain, i::AbstractVector{<:Integer}) = ProteinChain(chain.id, chain.sequence[i], chain.backbone[:,:,i], chain.atoms[i])
+import Backboner
 
-Base.summary(chain::ProteinChain) = "$(countresidues(chain))-residue ProteinChain \"$(chain.id)\""
+Backboner.Backbone(chain::AbstractProteinChain) = Backbone(chain.backbone)
+Backboner.ChainedBonds(chain::AbstractProteinChain) = ChainedBonds(Backbone(chain))
+Backboner.Frames(chain::AbstractProteinChain, ideal_residue=STANDARD_RESIDUE) = Frames(Backbone(chain), ideal_residue)
 
-function offset!(chain::ProteinChain, coords::Vector{<:Real})
-    @assert length(coords) == 3
+psi_angles(chain::AbstractProteinChain) = get_torsion_angles(Backbone(chain))[1:3:end]
+omega_angles(chain::AbstractProteinChain) = get_torsion_angles(Backbone(chain))[2:3:end]
+phi_angles(chain::AbstractProteinChain) = get_torsion_angles(Backbone(chain))[3:3:end]
+
+function offset!(chain::AbstractProteinChain, coords::Vector{<:Real})
     chain.backbone .+= coords
     for residue_atoms in chain.atoms
         for atom in residue_atoms
@@ -44,14 +56,3 @@ function offset!(chain::ProteinChain, coords::Vector{<:Real})
     end
     return chain
 end
-
-import Backboner
-
-Backboner.Backbone(chain::ProteinChain) = Backbone(chain.backbone)
-Backboner.ChainedBonds(chain::ProteinChain) = ChainedBonds(Backbone(chain))
-Backboner.Frames(chain::ProteinChain, ideal_residue=STANDARD_RESIDUE) = Frames(Backbone(chain), ideal_residue)
-
-# TODO: "contiguity" field/property to mask outputs with NaN where residues are not contiguous
-psi_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[1:3:end]
-omega_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[2:3:end]
-phi_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[3:3:end]
