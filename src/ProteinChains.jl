@@ -1,12 +1,8 @@
 module ProteinChains
 
-using DynamicStructs
+using StaticArrays: SVector
 
 using Backboner
-export Backbone
-export ChainedBonds
-export get_bond_lengths, get_bond_angles, get_torsion_angles
-export Frames
 
 include("ideal.jl")
 export BackboneGeometry
@@ -16,23 +12,20 @@ export append_residue
 export prepend_residue
 
 include("atom.jl")
+export Atom
+export encode_atom_name, decode_atom_name
+
+include("properties.jl")
+export ChainProperty, ResidueProperty
 
 include("chain.jl")
-export AbstractProteinChain
 export ProteinChain
-export length
+export annotate
 export psi_angles, omega_angles, phi_angles
-
-include("annotated-chain.jl")
-export AnnotatedProteinChain
-export annotate!, annotate
-export annotate_indexable!, annotate_indexable
+export get_atoms, get_backbone
 
 include("structure.jl")
 export ProteinStructure
-
-include("secondary-structure.jl")
-export assign_secondary_structure, assign_secondary_structure!
 
 include("io/io.jl")
 export readcif, readpdb

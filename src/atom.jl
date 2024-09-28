@@ -11,7 +11,7 @@ pad_atom_name(name::AbstractString, element_symbol::AbstractString) = rpad(" "^(
 encode_atom_name(name::AbstractString, element_symbol::AbstractString) = reinterpret(UInt32, codeunits(pad_atom_name(name, element_symbol)))[1]
 decode_atom_name(name::UInt32) = String(reinterpret(UInt8, [name]))
 
-mutable struct Atom{T<:AbstractFloat}
+struct Atom{T<:AbstractFloat}
     name::UInt32
     atomic_number::Int8
     x::T
@@ -20,17 +20,12 @@ mutable struct Atom{T<:AbstractFloat}
 end
 
 Atom(name::UInt32, atomic_number::Integer, x::T, y::T, z::T) where T = Atom{T}(name, atomic_number, x, y, z)
-Atom(name::AbstractString, element_symbol::AbstractString, coords::AbstractVector{<:AbstractFloat}) =
+Atom(name::AbstractString, element_symbol::AbstractString, coords::AbstractVector{T}) where T =
     Atom(encode_atom_name(name, element_symbol), element_symbol_to_atomic_number(element_symbol), coords...)
 
-coords(atom::Atom) = [atom.x, atom.y, atom.z]
+coords(atom::Atom) = SVector(atom.x, atom.y, atom.z)
 
 Base.summary(atom::Atom) = "$(elements[atom.atomic_number].name) atom at [$(atom.x), $(atom.y), $(atom.z)])"
 
-function offset!(atom::Atom, coords::Vector{<:Real})
-    @assert length(coords) == 3
-    atom.x += coords[1]
-    atom.y += coords[2]
-    atom.z += coords[3]
-    return atom
-end
+Base.show(io::IO, atom::Atom{T}) where T = print(io,
+    "Atom(\"$(decode_atom_name(atom.name))\", \"$(atomic_number_to_element_symbol(atom.atomic_number))\", $(coords(atom)))")

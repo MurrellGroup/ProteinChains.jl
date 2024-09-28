@@ -7,7 +7,6 @@ function renumber!(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFD
     label_seq_ids = mmcif_dict["_atom_site.label_seq_id"]
     auth_seq_ids = mmcif_dict["_atom_site.auth_seq_id"]
     auth_asym_ids = mmcif_dict["_atom_site.auth_asym_id"]
-
     reduced = Int[]
     current_auth_seq_id = ""
     for (i, auth_seq_id) in enumerate(auth_seq_ids)
@@ -31,7 +30,7 @@ function renumber!(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFD
         renum_dict = chainwise_auth_to_label_seq_ids[chain.id]
         numbering_str = map(n -> get(renum_dict, n, "?"), string.(chain.numbering))
         "?" in numbering_str && break
-        chain.numbering = parse.(Int, numbering_str)
+        chain.numbering .= parse.(Int, numbering_str)
     end
 
     return structure
