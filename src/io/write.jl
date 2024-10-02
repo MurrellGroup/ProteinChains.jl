@@ -47,7 +47,7 @@ function BioStructures.Chain(proteinchain::ProteinChain, model::BioStructures.Mo
             atom_serial += 1
             name = decode_atom_name(atom.name)
             coords = [atom.x, atom.y, atom.z]
-            element = atomic_number_to_element_symbol(atom.atomic_number)
+            element = number_to_element_symbol(atom.number)
             atom = BioStructures.Atom(atom_serial, name, ' ', coords, 1.0, 0.0, element, "  ", residue)
             push!(atom_list, atom.name)
             atoms[atom.name] = atom

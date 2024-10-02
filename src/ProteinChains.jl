@@ -33,4 +33,6 @@ export writecif, writepdb
 export PDBFormat, MMCIFFormat
 export pdbentry, @pdb_str
 
+include("h5.jl")
+
 end

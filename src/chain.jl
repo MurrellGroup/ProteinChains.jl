@@ -42,9 +42,13 @@ function Base.show(io::IO, chain::ProteinChain)
     print(io, "ProteinChain(")
     for fieldname in fieldnames(ProteinChain)
         show(io, getproperty(chain, fieldname))
-        fieldname == :properties || print(", ")
+        fieldname == :properties || print(io, ", ")
     end
-    print(")")
+    print(io, ")")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", chain::ProteinChain)
+    print(io, summary(chain))
 end
 
 function get_atoms(backbone_coords::Array{T,3}) where T
@@ -94,16 +98,16 @@ end
 using AssigningSecondaryStructure: assign_secondary_structure
 
 calculate_property(x, name::Symbol, args...) = calculate_property(x, Val(name), args...)
+annotate(chain::ProteinChain, names::Vararg{Symbol}) = annotate(chain; NamedTuple{names}(calculate_property(chain, name) for name in names)...)
 
-calculate_property(chain::ProteinChain, ::Val{:backbone}) = get_backbone(chain) |> ResidueProperty
-calculate_property(chain::ProteinChain, ::Val{:secondary_structure}) = Int8.(assign_secondary_structure(get_backbone(chain))) |> ResidueProperty
-calculate_property(chain::ProteinChain, ::Val{:residue_rotations}) = Backboner.Frames(Backbone(get_backbone(chain)), chain.ideal_residue).rotations |> ResidueProperty
-calculate_property(chain::ProteinChain, ::Val{:residue_translations}) = dropdims(Backboner.centroid(get_backbone(chain); dims=2); dims=2) |> ResidueProperty
-calculate_property(chain::ProteinChain{T}, ::Val{:residue_torsion_angles}) where T = [reshape(calculate_property(chain, :torsion_angles)[], 3, :) fill(T(NaN), 3)] |> ResidueProperty
-
+calculate_property(chain::ProteinChain, ::Val{:ideal_residue}) = collect(STANDARD_RESIDUE) |> ChainProperty
 calculate_property(chain::ProteinChain, ::Val{:bond_lengths}) = Backboner.get_bond_lengths(Backboner.Backbone(get_backbone(chain))) |> ChainProperty
 calculate_property(chain::ProteinChain, ::Val{:bond_angles}) = Backboner.get_bond_angles(Backboner.Backbone(get_backbone(chain))) |> ChainProperty
 calculate_property(chain::ProteinChain, ::Val{:torsion_angles}) = Backboner.get_torsion_angles(Backboner.Backbone(get_backbone(chain))) |> ChainProperty
 calculate_property(chain::ProteinChain, ::Val{:is_knotted}) = Backboner.is_knotted(Backboner.Backbone(get_backbone(chain)[:,2,:])) |> ChainProperty
 
-annotate(chain::ProteinChain, names::Vararg{Symbol}) = annotate(chain; NamedTuple{names}(calculate_property(chain, name) for name in names)...)
+calculate_property(chain::ProteinChain, ::Val{:backbone}) = get_backbone(chain) |> ResidueProperty
+calculate_property(chain::ProteinChain, ::Val{:secondary_structure}) = Int8.(assign_secondary_structure(get_backbone(chain))) |> ResidueProperty
+calculate_property(chain::ProteinChain, ::Val{:residue_rotations}) = Backboner.Frames(Backbone(get_backbone(chain)), hasproperty(chain, :ideal_residue) ? chain.ideal_residue : STANDARD_RESIDUE).rotations |> ResidueProperty
+calculate_property(chain::ProteinChain, ::Val{:residue_translations}) = dropdims(Backboner.centroid(get_backbone(chain); dims=2); dims=2) |> ResidueProperty
+calculate_property(chain::ProteinChain{T}, ::Val{:residue_torsion_angles}) where T = [reshape(calculate_property(chain, :torsion_angles)[], 3, :) fill(T(NaN), 3)] |> ResidueProperty

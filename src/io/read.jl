@@ -31,17 +31,17 @@ function ProteinChain(residues::Vector{BioStructures.AbstractResidue})
     return ProteinChain(id, atoms, sequence, numbering)
 end
 
-function ProteinChain(chain::BioStructures.Chain, selector=backbone_residue_selector)
-    residues = BioStructures.collectresidues(chain, selector)
-    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), "", zeros(3, 3, 0), Int[], Vector{Atom{Float64}}[])
+function ProteinChain(chain::BioStructures.Chain, backbone_residue_selector=backbone_residue_selector)
+    residues = BioStructures.collectresidues(chain, backbone_residue_selector)
+    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", Int[])
     return ProteinChain(residues)
 end
 
-function ProteinStructure(struc::BioStructures.MolecularStructure, selector=backbone_residue_selector; mmcifdict=nothing)
+function ProteinStructure(struc::BioStructures.MolecularStructure, backbone_residue_selector=backbone_residue_selector; mmcifdict=nothing)
     proteinchains = ProteinChain{Float64}[]
-    atoms = Atom.(BioStructures.collectatoms(BioStructures.collectresidues(struc, !selector)))
+    atoms = Atom.(BioStructures.collectatoms(BioStructures.collectresidues(struc, !backbone_residue_selector)))
     for model in struc, chain in model
-        push!(proteinchains, ProteinChain(chain, selector))
+        push!(proteinchains, ProteinChain(chain, backbone_residue_selector))
     end
     proteinstructure = ProteinStructure(struc.name, atoms, proteinchains)
     mmcifdict isa BioStructures.MMCIFDict && renumber!(proteinstructure, mmcifdict)

@@ -34,4 +34,7 @@ function map_atoms!(f::Function, structure::ProteinStructure, args...)
         structure.atoms[i] = f(structure.atoms[i], args...)
     end
     return structure
-end 
+end
+
+annotate(structure::ProteinStructure, names::Vararg{Symbol}) =
+    ProteinStructure(structure.name, structure.atoms, annotate.(structure.chains, names...), structure.numbering)
