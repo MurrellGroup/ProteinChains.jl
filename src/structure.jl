@@ -1,3 +1,6 @@
+"""
+    ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
+"""
 struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
     name::String
     atoms::Vector{Atom{T}}

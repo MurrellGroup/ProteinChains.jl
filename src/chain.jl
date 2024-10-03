@@ -1,3 +1,6 @@
+"""
+    ProteinChain{T<:Real,Ps<:NamedProperties}
+"""
 struct ProteinChain{T<:Real,Ps<:NamedProperties}
     id::String
     atoms::Vector{Vector{Atom{T}}}
@@ -20,12 +23,15 @@ end
 
 ProteinChain(id, atoms, sequence, numbering) = ProteinChain(id, atoms, sequence, numbering, (;))
 
+Base.:(==)(chain1::ProteinChain, chain2::ProteinChain) = propertynames(chain1) == propertynames(chain2) &&
+    !any(getproperty(chain1, name) != getproperty(chain2, name) for name in propertynames(chain1, false))
+
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
 Base.getproperty(chain::ProteinChain, name::Symbol) =
     name in fieldnames(ProteinChain) ? getfield(chain, name) : getfield(getfield(chain, :properties), name)[]
 
-Base.propertynames(chain::ProteinChain, private::Bool) = union(fieldnames(ProteinChain), propertynames(chain.properties))
+Base.propertynames(chain::ProteinChain, private::Bool=false) = (setdiff(fieldnames(ProteinChain), private ? () : (:properties,))..., propertynames(chain.properties)...)
 
 function Base.getindex(chain::ProteinChain, i::AbstractVector)
     properties = map(p -> p[i], chain.properties)

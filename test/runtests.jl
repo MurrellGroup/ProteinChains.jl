@@ -36,4 +36,16 @@ using Test
 
     end
 
+    @testset "serialization" begin
+        mktempdir() do dir
+            filename = "dataset.h5"
+            path = joinpath(dir, filename)
+            dataset1 = ProteinDataset([annotate(pdb"1EYE", :backbone)])
+            ProteinChains.serialize(path, dataset1)
+            dataset2 = ProteinChains.deserialize(path)
+            @test dataset1 == dataset2
+            @test hasproperty(first(values(dataset1))["A"], :backbone)
+        end
+    end
+
 end

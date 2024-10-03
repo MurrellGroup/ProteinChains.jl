@@ -5,7 +5,7 @@ function Base.write(parent::Union{HDF5.File,HDF5.Group}, chain::ProteinChain{T},
     HDF5.attributes(chain_group)["T"] = string(T)
 
     chain_group["id"] = chain.id
-    chain_group["atom_chunk_sizes"] = map(UInt8∘length, chain.atoms)
+    chain_group["atom_chunk_sizes"] = map(UInt32∘length, chain.atoms)
     chain_group["atoms_flattened"] = reduce(vcat, chain.atoms)
     chain_group["sequence"] = chain.sequence
     chain_group["numbering"] = map(UInt32, chain.numbering)
@@ -77,12 +77,15 @@ function Base.read(group::Union{Union{HDF5.File,HDF5.Group}}, ::Type{ProteinStru
     return ProteinStructure(name, atoms, chains, numbering)
 end
 
-function serialize(path::AbstractString, structures::AbstractVector{<:ProteinStructure}; mode="w")
+function serialize(path::AbstractString, dataset::ProteinDataset; mode="w")
     HDF5.h5open(path, mode) do f
-        foreach(structure -> write(f, structure), structures)
+        foreach(((key, structure),) -> write(f, structure, key), dataset)
     end
     return path
 end
+
+serialize(path::AbstractString, structures::AbstractVector{<:ProteinStructure}; kwargs...) =
+    serialize(path, ProteinDataset(structures), kwargs...)
 
 function deserialize(path::AbstractString)
     structures = ProteinStructure[]
@@ -91,5 +94,5 @@ function deserialize(path::AbstractString)
             push!(structures, read(f[key], ProteinStructure))
         end
     end
-    return structures
+    return ProteinDataset(structures)
 end
