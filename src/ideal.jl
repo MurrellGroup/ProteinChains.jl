@@ -34,21 +34,21 @@ the N, Ca, and C atom positions of a residue positioned at the origin.
 struct IdealResidue{T<:AbstractFloat} <: AbstractMatrix{T}
     backbone_geometry::BackboneGeometry
     N_Ca_C_coords::Matrix{T}
+end
 
-    function IdealResidue{T}(backbone_geometry::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY; template=nothing) where T
-        N_Ca_C_coords = Matrix{T}(undef, 3, 3)
-        N_pos, Ca_pos, C_pos = eachcol(N_Ca_C_coords)
-        Θ = backbone_geometry.N_Ca_C_angle - π/2
-        N_pos .= [0, 0, 0]
-        Ca_pos .= [backbone_geometry.N_Ca_length, 0, 0]
-        C_pos .= Ca_pos + backbone_geometry.Ca_C_length * [sin(Θ), cos(Θ), 0]
-        N_Ca_C_coords .-= Backboner.centroid(N_Ca_C_coords; dims=2)
-        if !isnothing(template)
-            wanted_orientation, current_offset, wanted_offset = Backboner.kabsch_algorithm(N_Ca_C_coords, template)
-            N_Ca_C_coords .= wanted_orientation * (N_Ca_C_coords .- current_offset) .+ wanted_offset
-        end
-        new{T}(backbone_geometry, N_Ca_C_coords)
+function IdealResidue{T}(backbone_geometry::BackboneGeometry=DEFAULT_BACKBONE_GEOMETRY; template=nothing) where T
+    N_Ca_C_coords = Matrix{T}(undef, 3, 3)
+    N_pos, Ca_pos, C_pos = eachcol(N_Ca_C_coords)
+    Θ = backbone_geometry.N_Ca_C_angle - π/2
+    N_pos .= [0, 0, 0]
+    Ca_pos .= [backbone_geometry.N_Ca_length, 0, 0]
+    C_pos .= Ca_pos + backbone_geometry.Ca_C_length * [sin(Θ), cos(Θ), 0]
+    N_Ca_C_coords .-= Backboner.centroid(N_Ca_C_coords; dims=2)
+    if !isnothing(template)
+        wanted_orientation, current_offset, wanted_offset = Backboner.kabsch_algorithm(N_Ca_C_coords, template)
+        N_Ca_C_coords .= wanted_orientation * (N_Ca_C_coords .- current_offset) .+ wanted_offset
     end
+    IdealResidue{T}(backbone_geometry, N_Ca_C_coords)
 end
 
 Base.size(::IdealResidue) = (3,3)
@@ -65,7 +65,7 @@ Thus, we can use this residue as a template for aligning other residues with ver
 geometry to it.
 
 ```jldocotest
-julia> IdealResidue{Float64}(BackboneGeometry(N_Ca_C_angle = 1.93); template=ProteinChains.STANDARD_RESIDUE)
+julia> IdealResidue{Float64}(BackboneGeometry(N_Ca_C_angle = 1.93); template=ProteinChains.STANDARD_RESIDUE_TEMPLATE)
 3×3 IdealResidue{Float64}:
  -1.06447   -0.199174   1.26364
   0.646303  -0.529648  -0.116655

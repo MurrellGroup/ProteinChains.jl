@@ -10,20 +10,14 @@ get_sequence(residues::Vector{BioStructures.AbstractResidue}) = join(map(onelett
 get_atom(residue::BioStructures.AbstractResidue, name::AbstractString) =
     BioStructures.collectatoms(residue, a -> BioStructures.atomnameselector(a, [name])) |> only
 
-get_backbone(residue::BioStructures.AbstractResidue) =
-    stack(name -> BioStructures.coords(get_atom(residue, name)), BACKBONE_ATOM_NAMES)
-
-get_backbone(residues::Vector{BioStructures.AbstractResidue}) =
-    mapreduce(get_backbone, hcat, residues; init=Matrix{Float64}(undef, 3, 0))
-
 Atom(atom::BioStructures.Atom) = Atom(atom.name, atom.element, atom.coords)
 Atom(atom::BioStructures.DisorderedAtom) = Atom(BioStructures.defaultatom(atom))
 
-function get_nonbackbone_atoms(residues::Vector{BioStructures.AbstractResidue})
+function get_atoms(residues::Vector{BioStructures.AbstractResidue})
     atoms = Vector{Atom{Float64}}[]
     for residue in residues
         residue = residue isa BioStructures.DisorderedResidue ? BioStructures.defaultresidue(residue) : residue
-        residue_atoms = map(Atom, BioStructures.collectatoms(residue, !backbone_atom_selector))
+        residue_atoms = map(Atom, BioStructures.collectatoms(residue))
         push!(atoms, residue_atoms)
     end
     return atoms
@@ -31,30 +25,31 @@ end
 
 function ProteinChain(residues::Vector{BioStructures.AbstractResidue})
     id = only(unique(map(BioStructures.chainid, residues)))
+    atoms = get_atoms(residues)
     sequence = get_sequence(residues)
-    backbone = reshape(get_backbone(residues), 3, 3, :)
-    atoms = get_nonbackbone_atoms(residues)
     numbering = map(BioStructures.resnumber, residues)
-    return ProteinChain(id, sequence, backbone, numbering, atoms)
+    return ProteinChain(id, atoms, sequence, numbering)
 end
 
-function ProteinChain(chain::BioStructures.Chain, selector=backbone_residue_selector)
-    residues = BioStructures.collectresidues(chain, selector)
-    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), "", zeros(3, 3, 0), Int[], Vector{Atom{Float64}}[])
+function ProteinChain(chain::BioStructures.Chain, backbone_residue_selector=backbone_residue_selector)
+    residues = BioStructures.collectresidues(chain, backbone_residue_selector)
+    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", Int[])
     return ProteinChain(residues)
 end
 
-function ProteinStructure(struc::BioStructures.MolecularStructure, selector=backbone_residue_selector; path=nothing)
-    chains = ProteinChain[]
+function ProteinStructure(struc::BioStructures.MolecularStructure, backbone_residue_selector=backbone_residue_selector; mmcifdict=nothing)
+    proteinchains = ProteinChain{Float64}[]
+    atoms = Atom.(BioStructures.collectatoms(BioStructures.collectresidues(struc, !backbone_residue_selector)))
     for model in struc, chain in model
-        push!(chains, ProteinChain(chain, selector))
+        push!(proteinchains, ProteinChain(chain, backbone_residue_selector))
     end
-    structure = ProteinStructure(struc.name, chains)
-    !isnothing(path) && endswith(path, ".cif") && renumber!(structure, BioStructures.MMCIFDict(path))
-    return structure
+    proteinstructure = ProteinStructure(struc.name, atoms, proteinchains)
+    mmcifdict isa BioStructures.MMCIFDict && renumber!(proteinstructure, mmcifdict)
+    return proteinstructure
 end
 
-Base.read(path::AbstractString, ::Type{ProteinStructure}, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format); path)
+Base.read(path::AbstractString, ::Type{ProteinStructure}, format::Type{MMCIFFormat}) = ProteinStructure(read(path, format); mmcifdict=BioStructures.MMCIFDict(path))
+Base.read(path::AbstractString, ::Type{ProteinStructure}, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format))
 Base.read(path::AbstractString, T::Type{ProteinStructure}) = read(path, T, get_format(path))
 
 readcif(path::AbstractString) = read(path, ProteinStructure, MMCIFFormat)

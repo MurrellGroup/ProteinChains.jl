@@ -5,7 +5,7 @@
 [![Build Status](https://github.com/MurrellGroup/ProteinChains.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MurrellGroup/ProteinChains.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/MurrellGroup/ProteinChains.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/MurrellGroup/ProteinChains.jl)
 
-This Julia package provides implements the `ProteinChain` type: a GPU-friendly structure-of-arrays representation of protein chains.
+This Julia package provides implements the `ProteinChain` type: a chain-level structure-of-arrays type representation of proteins, with support for indexing by residue index.
 
 ## Installation
 
@@ -16,7 +16,7 @@ Pkg.add("ProteinChains")
 
 ## Examples
 
-The `ProteinChain` type is meant to only store a set of quintessential fields, from which most other properties can be derived.
+The `ProteinChain` type is meant to only store a basic set of fields, from which some other properties might be derived.
 
 ```julia
 julia> using ProteinChains
@@ -24,43 +24,29 @@ julia> using ProteinChains
 julia> structure = pdb"1EYE" # string macro to fetch proteins from the PDB
 [ Info: Downloading file from PDB: 1EYE
 1-chain ProteinStructure "1EYE.cif"
- 256-residue ProteinChain{Float64} (A)
+ 256-residue ProteinChain{Float64, @NamedTuple{}} (A)
 
 julia> propertynames(chain)
-(:id, :sequence, :backbone, :numbering, :atoms)
+(:id, :atoms, :sequence, :numbering)
 ```
 
-To store additional properties, `AnnotatedProteinChain` can be used to add dynamic properties to the chain:
+To store additional properties, `annotate` can be used to attach persistent chain-level properties or indexable residue-level properties:
 
 ```julia
-julia> annotated_chain = annotate(chain; model=1)
-256-residue AnnotatedProteinChain{Float64} (A):
-  6 fields:
-    id::String = "A"
-    sequence::String = <exceeds max length>
-    backbone::Array{Float64,3} = <exceeds max length>
-    numbering::Vector{Int64} = <exceeds max length>
-    atoms::Vector{Vector{ProteinChains.Atom{Float64}}} = <exceeds max length>
-    indexable_properties::Vector{Symbol} = Symbol[]
-  1 property:
-    model::Int64 = 1
-```
+julia> chain = structure["A"]
+256-residue ProteinChain{Float64, @NamedTuple{}} (A)
 
-For properties of type `<:AbstractArray` that represent residue-level information, `annotate_indexable!` will index the last dimension of the property when the chain is indexed:
+julia> annotated_chain = annotate(chain; taxid=ChainProperty(83332))
+256-residue ProteinChain{Float64, @NamedTuple{taxid::ChainProperty{Int64}}} (A)
 
-```julia
-julia> annotate_indexable!(annotated_chain; secondary_structure=assign_secondary_structure(annotated_chain)
-256-residue AnnotatedProteinChain{Float64} (A):
-  6 fields:
-    id::String = "A"
-    sequence::String = <exceeds max length>
-    backbone::Array{Float64,3} = <exceeds max length>
-    numbering::Vector{Int64} = <exceeds max length>
-    atoms::Vector{Vector{ProteinChains.Atom{Float64}}} = <exceeds max length>
-    indexable_properties::Vector{Symbol} = [:secondary_structure]
-  2 properties:
-    model::Int64 = 1
-    secondary_structure::Vector{Int64} = [1, 1, 3, 3, 3, 3, 3, 3, 3, 1  …  2, 2, 2, 2, 2, 2, 2, 1, 1, 1]
+julia> annotated_chain = annotate(annotated_chain; some_residue_property=ResidueProperty(rand(3,256))) # last dimension gets indexed
+256-residue ProteinChain{Float64, @NamedTuple{ORGANISM_TAXID::ChainProperty{Int64}, some_residue_property::ResidueProperty{Matrix{Float64}}}} (A)
+
+julia> annotated_chain[1:100].some_residue_property
+3×100 Matrix{Float64}:
+ 0.273545  0.639173  0.92708   …  0.459441  0.196407  0.880034       
+ 0.981498  0.70263   0.279264     0.552049  0.89274   0.0328866      
+ 0.169268  0.117848  0.732741     0.301921  0.187094  0.281187
 ```
 
 ## See also
