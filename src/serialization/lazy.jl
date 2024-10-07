@@ -18,9 +18,9 @@ Base.length(deserializer::Deserializer) = length(keys(deserializer))
 Base.getindex(deserializer::Deserializer, key::AbstractString) = read(deserializer.file[key], ProteinStructure)
 
 function Base.iterate(deserializer::Deserializer, state...)
-    handler(::Nothing) = nothing
-    handler((key,state)::Tuple{String,Int}) = (key => deserializer[key], state)
-    return handler(iterate(deserializer.keys, state...))
+    process_iteration(::Nothing) = nothing
+    process_iteration((key,state)::Tuple{String,Int}) = (key => deserializer[key], state)
+    return process_iteration(iterate(keys(deserializer), state...))
 end
 
 Base.show(io::IO, deserializer::Deserializer) = print(io, "$(Deserializer)(\"$(deserializer.filename)\")")
