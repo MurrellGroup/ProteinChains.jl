@@ -1,7 +1,5 @@
 module ProteinChains
 
-using StaticArrays: SVector
-
 using Backboner
 
 include("ideal.jl")
@@ -37,5 +35,7 @@ export readcif, readpdb
 export writecif, writepdb
 export PDBFormat, MMCIFFormat
 export pdbentry, @pdb_str
+
+include("serialization/serialization.jl")
 
 end

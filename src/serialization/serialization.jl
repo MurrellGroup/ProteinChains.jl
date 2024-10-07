@@ -79,7 +79,9 @@ end
 
 function serialize(path::AbstractString, dataset::ProteinDataset; mode="w")
     HDF5.h5open(path, mode) do f
-        foreach(((key, structure),) -> write(f, structure, key), dataset)
+        for (key, structure) in dataset
+            write(f, structure, key)
+        end
     end
     return path
 end
@@ -96,3 +98,5 @@ function deserialize(path::AbstractString)
     end
     return ProteinDataset(structures)
 end
+
+include("lazy.jl")

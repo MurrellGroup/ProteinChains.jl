@@ -1,4 +1,5 @@
 using PeriodicTable: elements
+using StaticArrays: SVector
 
 const ELEMENT_SYMBOL_TO_NUMBER = Dict(uppercase(elements[number].symbol) => number for number in 1:118)
 const number_TO_ELEMENT_SYMBOL = Dict(n => s for (s, n) in ELEMENT_SYMBOL_TO_NUMBER)
@@ -22,10 +23,10 @@ end
 Atom{T}(atom::Atom) where T = Atom{T}(atom.name, atom.number, atom.x, atom.y, atom.z)
 
 @inline Atom(name::UInt32, number::Integer, x::T, y::T, z::T) where T = Atom{T}(name, number, x, y, z)
-@inline Atom(name::AbstractString, element_symbol::AbstractString, x::T, y::T, z::T) where T =
+@inline Atom(name::AbstractString, element_symbol::AbstractString, x, y, z) =
     Atom(encode_atom_name(name, element_symbol), element_symbol_to_number(element_symbol), x, y, z)
 
-@inline Atom(name, number, coords::AbstractVector{T}) where T = Atom(name, number, coords...)
+@inline Atom(name, number, coords::AbstractVector) = Atom(name, number, coords...)
 
 coords(atom::Atom) = SVector(atom.x, atom.y, atom.z)
 
