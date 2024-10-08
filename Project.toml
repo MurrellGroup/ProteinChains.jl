@@ -13,6 +13,7 @@ PeriodicTable = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+AssigningSecondaryStructure = "0.5"
 Backboner = "0.12"
 BioStructures = "4"
 HDF5 = "0.17"
