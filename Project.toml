@@ -18,6 +18,7 @@ BioStructures = "4"
 HDF5 = "0.17"
 LinearAlgebra = "1"
 PeriodicTable = "1"
+StaticArrays = "1"
 julia = "1"
 
 [extras]
