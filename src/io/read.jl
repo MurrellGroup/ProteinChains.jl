@@ -10,47 +10,44 @@ get_sequence(residues::Vector{BioStructures.AbstractResidue}) = join(map(onelett
 get_atom(residue::BioStructures.AbstractResidue, name::AbstractString) =
     BioStructures.collectatoms(residue, a -> BioStructures.atomnameselector(a, [name])) |> only
 
-Atom(atom::BioStructures.Atom) = Atom(atom.name, atom.element, atom.coords)
-Atom(atom::BioStructures.DisorderedAtom) = Atom(BioStructures.defaultatom(atom))
+Atom{T}(atom::BioStructures.Atom) where T = convert(Atom{T}, Atom(atom.name, atom.element, atom.coords))
+Atom{T}(atom::BioStructures.DisorderedAtom) where T = Atom{T}(BioStructures.defaultatom(atom))
 
-function get_atoms(residues::Vector{BioStructures.AbstractResidue})
+function get_atoms(::Type{Atom{T}}, residues::Vector{BioStructures.AbstractResidue}) where T
     atoms = Vector{Atom{Float64}}[]
     for residue in residues
         residue = residue isa BioStructures.DisorderedResidue ? BioStructures.defaultresidue(residue) : residue
-        residue_atoms = map(Atom, BioStructures.collectatoms(residue))
+        residue_atoms = map(Atom{T}, BioStructures.collectatoms(residue))
         push!(atoms, residue_atoms)
     end
     return atoms
 end
 
-function ProteinChain(residues::Vector{BioStructures.AbstractResidue})
+function ProteinChain{T}(chain::BioStructures.Chain) where T
+    residues = BioStructures.collectresidues(chain, backbone_residue_selector)
+    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), Vector{Atom{T}}[], "", Int[])
     id = only(unique(map(BioStructures.chainid, residues)))
-    atoms = get_atoms(residues)
+    atoms = get_atoms(Atom{T}, residues)
     sequence = get_sequence(residues)
     numbering = map(BioStructures.resnumber, residues)
     return ProteinChain(id, atoms, sequence, numbering)
 end
 
-function ProteinChain(chain::BioStructures.Chain, backbone_residue_selector=backbone_residue_selector)
-    residues = BioStructures.collectresidues(chain, backbone_residue_selector)
-    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", Int[])
-    return ProteinChain(residues)
-end
-
-function ProteinStructure(struc::BioStructures.MolecularStructure, backbone_residue_selector=backbone_residue_selector; mmcifdict=nothing)
-    proteinchains = ProteinChain{Float64}[]
-    atoms = Atom.(BioStructures.collectatoms(BioStructures.collectresidues(struc, !backbone_residue_selector)))
+function ProteinStructure{T}(struc::BioStructures.MolecularStructure; mmcifdict=nothing) where T
+    proteinchains = ProteinChain{T}[]
+    atoms = map(Atom{T}, BioStructures.collectatoms(BioStructures.collectresidues(struc, !backbone_residue_selector)))
     for model in struc, chain in model
-        push!(proteinchains, ProteinChain(chain, backbone_residue_selector))
+        push!(proteinchains, ProteinChain{T}(chain))
     end
     proteinstructure = ProteinStructure(struc.name, atoms, proteinchains)
     mmcifdict isa BioStructures.MMCIFDict && renumber!(proteinstructure, mmcifdict)
     return proteinstructure
 end
 
-Base.read(path::AbstractString, ::Type{ProteinStructure}, format::Type{MMCIFFormat}) = ProteinStructure(read(path, format); mmcifdict=BioStructures.MMCIFDict(path))
-Base.read(path::AbstractString, ::Type{ProteinStructure}, format::Type{<:ProteinFileFormat}) = ProteinStructure(read(path, format))
-Base.read(path::AbstractString, T::Type{ProteinStructure}) = read(path, T, get_format(path))
+Base.read(path::AbstractString, P::Type{ProteinStructure{T}}, ::Type{MMCIFFormat}) where T = P(read(path, MMCIFFormat); mmcifdict=BioStructures.MMCIFDict(path))
+Base.read(path::AbstractString, P::Type{ProteinStructure{T}}, ::Type{PDBFormat}) where T = P(read(path, PDBFormat))
+Base.read(path::AbstractString, P::Type{<:ProteinStructure}) = read(path, P, get_format(path))
+Base.read(path::AbstractString, ::Type{ProteinStructure}, args...) = read(path, ProteinStructure{Float64}, args...)
 
 readcif(path::AbstractString) = read(path, ProteinStructure, MMCIFFormat)
 readpdb(path::AbstractString) = read(path, ProteinStructure, PDBFormat)

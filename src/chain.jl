@@ -23,6 +23,9 @@ end
 
 ProteinChain(id, atoms, sequence, numbering) = ProteinChain(id, atoms, sequence, numbering, (;))
 
+Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
+    ProteinChain(chain.id, convert(Vector{Vector{Atom{T}}}, chain.atoms), chain.sequence, chain.numbering, chain.properties)
+
 Base.:(==)(chain1::ProteinChain, chain2::ProteinChain) = propertynames(chain1) == propertynames(chain2) &&
     !any(getproperty(chain1, name) != getproperty(chain2, name) for name in propertynames(chain1, false))
 
@@ -76,7 +79,7 @@ function get_backbone(atoms::Vector{Vector{Atom{T}}}) where T
     encoded_names = encode_atom_name.(BACKBONE_ATOM_NAMES, BACKBONE_ATOM_SYMBOLS)
     for (i, residue_atoms) in enumerate(atoms)
         for (j, name) in enumerate(encoded_names)
-            backbone_coords[:,j,i] = coords(argmax(atom -> atom.name == name, residue_atoms))
+            backbone_coords[:,j,i] = atom_coords(argmax(atom -> atom.name == name, residue_atoms))
         end
     end
     return backbone_coords

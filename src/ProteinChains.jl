@@ -2,40 +2,38 @@ module ProteinChains
 
 using Backboner
 
+using Compat: @compat
+
 include("ideal.jl")
 export BackboneGeometry
-export IdealResidue
-export STANDARD_RESIDUE
-export append_residue
-export prepend_residue
+export IdealResidue, STANDARD_RESIDUE
+export append_residue, prepend_residue
 
 include("atom.jl")
 export Atom
-export encode_atom_name, decode_atom_name
-export coords
+@compat public (atom_name, atom_number, atom_coords)
 
 include("properties.jl")
 export ChainProperty, ResidueProperty
+export annotate
 
 include("chain.jl")
 export ProteinChain
-export annotate
 export map_atoms!
-export psi_angles, omega_angles, phi_angles
 export get_atoms, get_backbone
+@compat public (psi_angles, omega_angles, phi_angles)
 
 include("structure.jl")
 export ProteinStructure
 
-include("dataset.jl")
-export ProteinDataset
-
 include("io/io.jl")
 export readcif, readpdb
 export writecif, writepdb
-export PDBFormat, MMCIFFormat
 export pdbentry, @pdb_str
+export PDBFormat, MMCIFFormat
 
-include("serialization/serialization.jl")
+include("store/store.jl")
+export ProteinStructureStore
+@compat public (serialize, deserialize)
 
 end
