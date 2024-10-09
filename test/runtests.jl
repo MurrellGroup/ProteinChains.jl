@@ -51,7 +51,7 @@ using Test
             delete!(store, "1EYE.cif")
             @test !haskey(store, "1EYE.cif")
 
-            close(filename)
+            close(store)
         end
     end
 
