@@ -66,7 +66,7 @@ Base.getindex(store::ProteinStructureStore, key::AbstractString) = readh5(store.
 Base.get(store::ProteinStructureStore, key, default) = key in keys(store) ? store[key] : default
 
 function Base.delete!(store::ProteinStructureStore, key::AbstractString)
-    store.mode == "r" && error("$ProteinStructureStore is read-only.")
+    store.mode == "r" && error("$ProteinStructureStore object is read-only.")
     if haskey(store, key)
         HDF5.delete_object(store.file, key)
         delete!(store.keys, key)
@@ -75,7 +75,7 @@ function Base.delete!(store::ProteinStructureStore, key::AbstractString)
 end
 
 function Base.setindex!(store::ProteinStructureStore, value::ProteinStructure, key::AbstractString)
-    store.mode == "r" && error("$ProteinStructureStore is read-only.")
+    store.mode == "r" && error("$ProteinStructureStore object is read-only.")
     key in keys(store) && delete!(store, key)
     group = HDF5.create_group(store.file, key)
     writeh5(group, value)
