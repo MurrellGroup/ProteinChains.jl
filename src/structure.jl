@@ -1,26 +1,30 @@
 """
     ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
+
+## Fields
+- `name::String`: Usually just the base name of the original file.
+- `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein chain.
+- `chains::Vector{<:ProteinChain{T}}`: a collection of `ProteinChain`s.
+
+## Examples
+
+```jldoctest
+julia> structure = pdb"1ASS"
+```
 """
 struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
     name::String
     atoms::Vector{Atom{T}}
     chains::Vector{<:ProteinChain{T}}
-    numbering::Vector{Int}
 end
 
-ProteinStructure(name, atoms, chains) = ProteinStructure(name, atoms, chains, collect(1:length(chains)))
-
 Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
-    ProteinStructure(structure.name, convert(Vector{Atom{T}}, structure.atoms), convert(Vector{ProteinChain{T}}, structure.chains), structure.numbering)
+    ProteinStructure(structure.name, convert(Vector{Atom{T}}, structure.atoms), convert(Vector{ProteinChain{T}}, structure.chains))
 
 Base.size(structure::ProteinStructure) = (length(structure.chains),)
 
 Base.getindex(structure::ProteinStructure, i::Integer) = structure.chains[i]
-
-function Base.getindex(structure::ProteinStructure, i::AbstractVector)
-    ProteinStructure(structure.name, structure.atoms, structure.chains[i], structure.numbering[i])
-end
-
+Base.getindex(structure::ProteinStructure, i::AbstractVector) = ProteinStructure(structure.name, structure.atoms, structure.chains[i])
 Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[findfirst(c -> c.id == id, structure.chains)]
 
 Base.summary(structure::ProteinStructure) = "$(length(structure))-chain $(typeof(structure)) \"$(structure.name)\""
@@ -29,7 +33,7 @@ function Base.show(io::IO, structure::ProteinStructure)
     print(io, "$(typeof(structure))(")
     for fieldname in fieldnames(ProteinStructure)
         show(io, getfield(structure, fieldname))
-        fieldname != :numbering && print(io, ", ")
+        fieldname != :chains && print(io, ", ")
     end
     print(io, ")")
 end
@@ -51,5 +55,5 @@ function map_atoms!(f::Function, structure::ProteinStructure, args...)
     return structure
 end
 
-annotate(structure::ProteinStructure, names::Vararg{Symbol}) =
-    ProteinStructure(structure.name, structure.atoms, annotate.(structure.chains, names...), structure.numbering)
+addproperty(structure::ProteinStructure, names::Symbol...) =
+    ProteinStructure(structure.name, structure.atoms, addproperty.(structure.chains, names...))

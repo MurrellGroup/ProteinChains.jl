@@ -14,8 +14,9 @@ export Atom
 @compat public (atom_name, atom_number, atom_coords)
 
 include("properties.jl")
-export ChainProperty, ResidueProperty
-export annotate
+export PersistentProperty, IndexableProperty
+export addproperty
+@compat public (AbstractProperty, NamedProperties)
 
 include("chain.jl")
 export ProteinChain
