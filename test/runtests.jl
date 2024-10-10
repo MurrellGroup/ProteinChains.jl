@@ -10,7 +10,7 @@ using Test
 
     @testset "ProteinStructure" begin
         chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5))
-        structure = ProteinStructure("1CHN", Atom{Float64}[], [chain])
+        structure = ProteinStructure("1CHN", Atom{Float64}[], [chain, chain])
         @test structure[1] === chain
         @test structure["A"] === chain
     end
@@ -39,7 +39,7 @@ using Test
     @testset "store" begin
         mktempdir() do dir
             filename = joinpath(dir, "store.h5")
-            structures = [annotate(pdb"1EYE", :backbone), annotate(pdb"3HFM", :backbone, :bond_lengths)]
+            structures = [addproperty(pdb"1EYE", :backbone), addproperty(pdb"3HFM", :backbone, :bond_lengths)]
             ProteinChains.serialize(filename, structures)
             structures_copy = ProteinChains.deserialize(filename)
             @test structures == structures_copy

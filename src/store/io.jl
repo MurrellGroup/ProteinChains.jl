@@ -12,7 +12,7 @@ function writeh5(group::HDF5.Group, chain::ProteinChain{T}) where T
     indexable = HDF5.create_group(group, "indexable")
     persistent = HDF5.create_group(group, "persistent")
     for (name, property) in pairs(chain.properties)
-        g = property isa ResidueProperty ? indexable : persistent
+        g = property isa IndexableProperty ? indexable : persistent
         g[string(name)] = property[]
     end
 
@@ -35,8 +35,8 @@ function readh5(group::HDF5.Group, ::Type{ProteinChain})
     indexable = group["indexable"]
     persistent = group["persistent"]
     properties = merge(
-        NamedTuple((Symbol(key) => ResidueProperty(read(indexable[key])) for key in keys(group["indexable"]))),
-        NamedTuple((Symbol(key) => ChainProperty(read(persistent[key])) for key in keys(group["persistent"])))
+        NamedTuple((Symbol(key) => IndexableProperty(read(indexable[key])) for key in keys(group["indexable"]))),
+        NamedTuple((Symbol(key) => PersistentProperty(read(persistent[key])) for key in keys(group["persistent"])))
     )
 
     return ProteinChain(id, atoms, sequence, numbering, properties)
@@ -47,12 +47,11 @@ function writeh5(group::HDF5.Group, structure::ProteinStructure{T}) where T
 
     group["name"] = structure.name
     group["atoms"] = structure.atoms
-    group["numbering"] = structure.numbering
 
     chains_group = HDF5.create_group(group, "chains")
 
-    for (chain, number) in zip(structure.chains, structure.numbering)
-        chain_group = HDF5.create_group(chains_group, string(number))
+    for (i, chain) in enumerate(structure.chains)
+        chain_group = HDF5.create_group(chains_group, string(i))
         writeh5(chain_group, chain)
     end
 
@@ -63,14 +62,13 @@ function readh5(group::HDF5.Group, ::Type{ProteinStructure})
     T = eval(Symbol(read(HDF5.attributes(group)["T"])))
     name = read(group["name"])
     atoms = [Atom(atom.name, atom.number, atom.x, atom.y, atom.z) for atom in read(group["atoms"])]
-    numbering = read(group["numbering"])
 
     chains_group = group["chains"]
     chains = ProteinChain{T}[]
-    for i in numbering
-        chain = readh5(chains_group[string(i)], ProteinChain)
+    for key in keys(chains_group)
+        chain = readh5(chains_group[key], ProteinChain)
         push!(chains, chain)
     end
 
-    return ProteinStructure(name, atoms, chains, numbering)
+    return ProteinStructure(name, atoms, chains)
 end

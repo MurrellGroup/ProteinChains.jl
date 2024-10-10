@@ -1,5 +1,18 @@
 """
     ProteinChain{T<:Real,Ps<:NamedProperties}
+
+Represents a protein chain with a basic set of fields from which some other properties might be derived.
+The [`addproperty`](@ref) function can be used to instantiate new chains with additional properties.
+
+## Fields
+- `id::String`: Identifier for the protein chain.
+- `atoms::Vector{Vector{Atom{T}}}`: List of atoms in each residue.
+- `sequence::String`: Amino acid sequence of the protein.
+- `numbering::Vector{Int32}`: Residue numbering.
+- `properties::Ps`: Named properties associated with the chain.
+
+See also [`addproperty`](@ref), [`PersistentProperty`](@ref), [`IndexableProperty`](@ref).
+```
 """
 struct ProteinChain{T<:Real,Ps<:NamedProperties}
     id::String
@@ -16,7 +29,7 @@ function ProteinChain(
     @assert sizeof(sequence) == len
     @assert length(numbering) == len
     for property in properties
-        property isa ResidueProperty && @assert size(property[], ndims(property[])) == len
+        property isa IndexableProperty && @assert size(property[], ndims(property[])) == len
     end
     ProteinChain{T,Ps}(id, atoms, sequence, Int32.(numbering), properties)
 end
@@ -41,8 +54,21 @@ function Base.getindex(chain::ProteinChain, i::AbstractVector)
     ProteinChain(chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], properties)
 end
 
-annotate(chain::ProteinChain; annotations...) =
-    ProteinChain(chain.id, chain.atoms, chain.sequence, chain.numbering, merge(chain.properties, annotations))
+"""
+    addproperty(chain::ProteinChain; properties...)
+
+Creates a new `ProteinChain` instance with the added properties.
+Indexing behavior of property values can be specified by wrapping
+them with `PersistentProperty` or `IndexableProperty`.
+
+Values get wrapped by `PersistentProperty` by default.
+
+See also [`PersistentProperty`](@ref), [`IndexableProperty`](@ref)
+"""
+function addproperty(chain::ProteinChain; properties...)
+    properties = map(p -> p isa AbstractProperty ? p : ChainProperty(p), NamedTuple(properties))
+    return ProteinChain(chain.id, chain.atoms, chain.sequence, chain.numbering, merge(chain.properties, properties))
+end
 
 Base.summary(chain::ProteinChain) = "$(length(chain))-residue $(typeof(chain)) ($(chain.id))"
 
@@ -106,17 +132,24 @@ end
 
 using AssigningSecondaryStructure: assign_secondary_structure
 
+"""
+    addproperty(chain::ProteinChain, names::Symbol...)
+    addproperty(chain::ProteinStructure, names::Symbol...)
+
+Add predefined properties to a chain or chains of a structure.
+"""
+addproperty(chain::ProteinChain, names::Symbol...) = addproperty(chain; NamedTuple{names}(calculate_property(chain, name) for name in names)...)
+
 calculate_property(x, name::Symbol, args...) = calculate_property(x, Val(name), args...)
-annotate(chain::ProteinChain, names::Vararg{Symbol}) = annotate(chain; NamedTuple{names}(calculate_property(chain, name) for name in names)...)
 
-calculate_property(chain::ProteinChain, ::Val{:ideal_residue}) = collect(STANDARD_RESIDUE) |> ChainProperty
-calculate_property(chain::ProteinChain, ::Val{:bond_lengths}) = Backboner.get_bond_lengths(Backboner.Backbone(get_backbone(chain))) |> ChainProperty
-calculate_property(chain::ProteinChain, ::Val{:bond_angles}) = Backboner.get_bond_angles(Backboner.Backbone(get_backbone(chain))) |> ChainProperty
-calculate_property(chain::ProteinChain, ::Val{:torsion_angles}) = Backboner.get_torsion_angles(Backboner.Backbone(get_backbone(chain))) |> ChainProperty
-calculate_property(chain::ProteinChain, ::Val{:is_knotted}) = Backboner.is_knotted(Backboner.Backbone(get_backbone(chain)[:,2,:])) |> ChainProperty
+calculate_property(chain::ProteinChain, ::Val{:ideal_residue}) = collect(STANDARD_RESIDUE) |> PersistentProperty
+calculate_property(chain::ProteinChain, ::Val{:bond_lengths}) = Backboner.get_bond_lengths(Backboner.Backbone(get_backbone(chain))) |> PersistentProperty
+calculate_property(chain::ProteinChain, ::Val{:bond_angles}) = Backboner.get_bond_angles(Backboner.Backbone(get_backbone(chain))) |> PersistentProperty
+calculate_property(chain::ProteinChain, ::Val{:torsion_angles}) = Backboner.get_torsion_angles(Backboner.Backbone(get_backbone(chain))) |> PersistentProperty
+calculate_property(chain::ProteinChain, ::Val{:is_knotted}) = Backboner.is_knotted(Backboner.Backbone(get_backbone(chain)[:,2,:])) |> PersistentProperty
 
-calculate_property(chain::ProteinChain, ::Val{:backbone}) = get_backbone(chain) |> ResidueProperty
-calculate_property(chain::ProteinChain, ::Val{:secondary_structure}) = Int8.(assign_secondary_structure(get_backbone(chain))) |> ResidueProperty
-calculate_property(chain::ProteinChain, ::Val{:residue_rotations}) = Backboner.Frames(Backbone(get_backbone(chain)), hasproperty(chain, :ideal_residue) ? chain.ideal_residue : STANDARD_RESIDUE).rotations |> ResidueProperty
-calculate_property(chain::ProteinChain, ::Val{:residue_translations}) = dropdims(Backboner.centroid(get_backbone(chain); dims=2); dims=2) |> ResidueProperty
-calculate_property(chain::ProteinChain{T}, ::Val{:residue_torsion_angles}) where T = [reshape(calculate_property(chain, :torsion_angles)[], 3, :) fill(T(NaN), 3)] |> ResidueProperty
+calculate_property(chain::ProteinChain, ::Val{:backbone}) = get_backbone(chain) |> IndexableProperty
+calculate_property(chain::ProteinChain, ::Val{:secondary_structure}) = Int8.(assign_secondary_structure(get_backbone(chain))) |> IndexableProperty
+calculate_property(chain::ProteinChain, ::Val{:residue_rotations}) = Backboner.Frames(Backbone(get_backbone(chain)), hasproperty(chain, :ideal_residue) ? chain.ideal_residue : STANDARD_RESIDUE).rotations |> IndexableProperty
+calculate_property(chain::ProteinChain, ::Val{:residue_translations}) = dropdims(Backboner.centroid(get_backbone(chain); dims=2); dims=2) |> IndexableProperty
+calculate_property(chain::ProteinChain{T}, ::Val{:residue_torsion_angles}) where T = [reshape(calculate_property(chain, :torsion_angles)[], 3, :) fill(T(NaN), 3)] |> IndexableProperty
