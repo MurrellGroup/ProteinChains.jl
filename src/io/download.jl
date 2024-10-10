@@ -1,7 +1,7 @@
 using Base.Filesystem
 
 const MAX_CACHE_ENTRIES = Ref{Int}(4)
-const CACHE_DIR = Ref{Union{String, Nothing}}(nothing)
+const CACHE_DIR = Ref{Union{String,Nothing}}(nothing)
 
 function initialize_cache_dir()
     if CACHE_DIR[] === nothing

@@ -1,4 +1,5 @@
 using PeriodicTable: elements
+using StaticArrays: SVector
 
 const ELEMENT_SYMBOL_TO_NUMBER = Dict(uppercase(elements[number].symbol) => number for number in 1:118)
 const number_TO_ELEMENT_SYMBOL = Dict(n => s for (s, n) in ELEMENT_SYMBOL_TO_NUMBER)
@@ -19,17 +20,19 @@ struct Atom{T<:AbstractFloat}
     z::T
 end
 
-Atom{T}(atom::Atom) where T = Atom{T}(atom.name, atom.number, atom.x, atom.y, atom.z)
+Base.convert(::Type{Atom{T}}, atom::Atom) where T = Atom{T}(atom.name, atom.number, atom.x, atom.y, atom.z)
 
 @inline Atom(name::UInt32, number::Integer, x::T, y::T, z::T) where T = Atom{T}(name, number, x, y, z)
-@inline Atom(name::AbstractString, element_symbol::AbstractString, x::T, y::T, z::T) where T =
+@inline Atom(name::AbstractString, element_symbol::AbstractString, x, y, z) =
     Atom(encode_atom_name(name, element_symbol), element_symbol_to_number(element_symbol), x, y, z)
 
-@inline Atom(name, number, coords::AbstractVector{T}) where T = Atom(name, number, coords...)
+@inline Atom(name, number, coords::AbstractVector) = Atom(name, number, coords...)
 
-coords(atom::Atom) = SVector(atom.x, atom.y, atom.z)
+atom_name(atom::Atom) = decode_atom_name(atom.name)
+atom_number(atom::Atom) = number_to_element_symbol(atom.number)
+atom_coords(atom::Atom) = SVector(atom.x, atom.y, atom.z)
 
 Base.summary(atom::Atom) = "$(elements[atom.number].name) atom at [$(atom.x), $(atom.y), $(atom.z)])"
 
 Base.show(io::IO, atom::Atom{T}) where T = print(io,
-    "Atom(\"$(decode_atom_name(atom.name))\", \"$(number_to_element_symbol(atom.number))\", $(coords(atom)))")
+    "Atom(\"$(decode_atom_name(atom.name))\", \"$(number_to_element_symbol(atom.number))\", $(atom_coords(atom)))")

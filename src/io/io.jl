@@ -18,5 +18,3 @@ include("renumber.jl")
 include("read.jl")
 include("write.jl")
 include("download.jl")
-
-include("serialization.jl")

@@ -36,15 +36,22 @@ using Test
 
     end
 
-    @testset "serialization" begin
+    @testset "store" begin
         mktempdir() do dir
-            filename = "dataset.h5"
-            path = joinpath(dir, filename)
-            dataset1 = ProteinDataset([annotate(pdb"1EYE", :backbone)])
-            ProteinChains.serialize(path, dataset1)
-            dataset2 = ProteinChains.deserialize(path)
-            @test dataset1 == dataset2
-            @test hasproperty(first(values(dataset1))["A"], :backbone)
+            filename = joinpath(dir, "store.h5")
+            structures = [annotate(pdb"1EYE", :backbone), annotate(pdb"3HFM", :backbone, :bond_lengths)]
+            ProteinChains.serialize(filename, structures)
+            structures_copy = ProteinChains.deserialize(filename)
+            @test structures == structures_copy
+
+            store = ProteinStructureStore(filename)
+            @test haskey(store, "1EYE.cif")
+            @test issubset((:backbone,), propertynames(store["1EYE.cif"][1]))
+            @test issubset((:backbone, :bond_lengths), propertynames(store["3HFM.cif"][1]))
+            delete!(store, "1EYE.cif")
+            @test !haskey(store, "1EYE.cif")
+
+            close(store)
         end
     end
 
