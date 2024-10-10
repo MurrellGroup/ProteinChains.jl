@@ -66,7 +66,7 @@ Values get wrapped by `PersistentProperty` by default.
 See also [`PersistentProperty`](@ref), [`IndexableProperty`](@ref)
 """
 function addproperty(chain::ProteinChain; properties...)
-    properties = map(p -> p isa AbstractProperty ? p : ChainProperty(p), NamedTuple(properties))
+    properties = map(p -> p isa AbstractProperty ? p : PersistentProperty(p), NamedTuple(properties))
     return ProteinChain(chain.id, chain.atoms, chain.sequence, chain.numbering, merge(chain.properties, properties))
 end
 
