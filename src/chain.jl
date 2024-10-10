@@ -2,7 +2,7 @@
     ProteinChain{T<:Real,Ps<:NamedProperties}
 
 Represents a protein chain with a basic set of fields from which some other properties might be derived.
-The [`addproperty`](@ref) function can be used to instantiate new chains with additional properties.
+The [`addproperties`](@ref) function can be used to instantiate new chains with additional properties.
 
 ## Fields
 - `id::String`: Identifier for the protein chain.
@@ -11,7 +11,7 @@ The [`addproperty`](@ref) function can be used to instantiate new chains with ad
 - `numbering::Vector{Int32}`: Residue numbering.
 - `properties::Ps`: Named properties associated with the chain.
 
-See also [`addproperty`](@ref), [`PersistentProperty`](@ref), [`IndexableProperty`](@ref).
+See also [`addproperties`](@ref), [`PersistentProperty`](@ref), [`IndexableProperty`](@ref).
 ```
 """
 struct ProteinChain{T<:Real,Ps<:NamedProperties}
@@ -55,7 +55,7 @@ function Base.getindex(chain::ProteinChain, i::AbstractVector)
 end
 
 """
-    addproperty(chain::ProteinChain; properties...)
+    addproperties(chain::ProteinChain; properties...)
 
 Creates a new `ProteinChain` instance with the added properties.
 Indexing behavior of property values can be specified by wrapping
@@ -65,7 +65,7 @@ Values get wrapped by `PersistentProperty` by default.
 
 See also [`PersistentProperty`](@ref), [`IndexableProperty`](@ref)
 """
-function addproperty(chain::ProteinChain; properties...)
+function addproperties(chain::ProteinChain; properties...)
     properties = map(p -> p isa AbstractProperty ? p : PersistentProperty(p), NamedTuple(properties))
     return ProteinChain(chain.id, chain.atoms, chain.sequence, chain.numbering, merge(chain.properties, properties))
 end
@@ -133,12 +133,12 @@ end
 using AssigningSecondaryStructure: assign_secondary_structure
 
 """
-    addproperty(chain::ProteinChain, names::Symbol...)
-    addproperty(chain::ProteinStructure, names::Symbol...)
+    addproperties(chain::ProteinChain, names::Symbol...)
+    addproperties(chain::ProteinStructure, names::Symbol...)
 
 Add predefined properties to a chain or chains of a structure.
 """
-addproperty(chain::ProteinChain, names::Symbol...) = addproperty(chain; NamedTuple{names}(calculate_property(chain, name) for name in names)...)
+addproperties(chain::ProteinChain, names::Symbol...) = addproperties(chain; NamedTuple{names}(calculate_property(chain, name) for name in names)...)
 
 calculate_property(x, name::Symbol, args...) = calculate_property(x, Val(name), args...)
 

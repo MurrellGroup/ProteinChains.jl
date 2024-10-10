@@ -15,7 +15,7 @@ export Atom
 
 include("properties.jl")
 export PersistentProperty, IndexableProperty
-export addproperty
+export addproperties
 @compat public (AbstractProperty, NamedProperties)
 
 include("chain.jl")

@@ -8,7 +8,7 @@ Base.getindex(p::AbstractProperty) = p.value
 A property of arbitrary type that persists after residue indexing of a chain.
 
 ```jldoctest
-julia> chain = addproperty(pdb"1ASS"A; x=PersistentProperty(1));
+julia> chain = addproperties(pdb"1ASS"A; x=PersistentProperty(1));
 
 julia> chain.x == chain[1:10].x
 true
@@ -31,7 +31,7 @@ residue indexing of the chain being propagated to the last dimension of the arra
 ```jldoctest
 julia> chain = pdb"1ASS"A;
 
-julia> chain = addproperty(pdb"1ASS"A; y=IndexableProperty(rand(2,152)));
+julia> chain = addproperties(pdb"1ASS"A; y=IndexableProperty(rand(2,152)));
 
 julia> chain.y == chain[1:10].y
 false
@@ -48,4 +48,4 @@ Base.getindex(p::IndexableProperty, i::AbstractVector) = selectdim(p.value, ndim
 
 const NamedProperties{names} = NamedTuple{names,<:Tuple{Vararg{AbstractProperty}}}
 
-function addproperty end
+function addproperties end

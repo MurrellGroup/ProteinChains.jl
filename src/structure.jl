@@ -55,5 +55,5 @@ function map_atoms!(f::Function, structure::ProteinStructure, args...)
     return structure
 end
 
-addproperty(structure::ProteinStructure, names::Symbol...) =
-    ProteinStructure(structure.name, structure.atoms, addproperty.(structure.chains, names...))
+addproperties(structure::ProteinStructure, names::Symbol...) =
+    ProteinStructure(structure.name, structure.atoms, addproperties.(structure.chains, names...))

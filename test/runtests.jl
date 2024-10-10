@@ -39,7 +39,7 @@ using Test
     @testset "store" begin
         mktempdir() do dir
             filename = joinpath(dir, "store.h5")
-            structures = [addproperty(pdb"1EYE", :backbone), addproperty(pdb"3HFM", :backbone, :bond_lengths)]
+            structures = [addproperties(pdb"1EYE", :backbone), addproperties(pdb"3HFM", :backbone, :bond_lengths)]
             ProteinChains.serialize(filename, structures)
             structures_copy = ProteinChains.deserialize(filename)
             @test structures == structures_copy
