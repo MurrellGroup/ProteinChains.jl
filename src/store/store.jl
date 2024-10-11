@@ -92,6 +92,15 @@ end
 Base.show(io::IO, store::ProteinStructureStore) = print(io, "$ProteinStructureStore(\"$(store.filename)\", $(store.mode))")
 Base.show(io::IO, ::MIME"text/plain", store::ProteinStructureStore) = print(io, summary(store))
 
+function ProteinStructureStore(f::Function, args...)
+    store = ProteinStructureStore(args...)
+    try
+        return f(store)
+    finally
+        close(store)
+    end
+end
+
 """
     serialize(filename::AbstractString, structures::AbstractVector{<:ProteinStructure})
 
