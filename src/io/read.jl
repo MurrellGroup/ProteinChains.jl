@@ -44,10 +44,16 @@ function ProteinStructure{T}(struc::BioStructures.MolecularStructure; mmcifdict=
     return proteinstructure
 end
 
-Base.read(path::AbstractString, P::Type{ProteinStructure{T}}, ::Type{MMCIFFormat}) where T = P(read(path, MMCIFFormat); mmcifdict=BioStructures.MMCIFDict(path))
+function Base.read(
+    path::AbstractString, P::Type{ProteinStructure{T}}, ::Type{MMCIFFormat};
+    mmcifdict=BioStructures.MMCIFDict(path)
+) where T
+    P(BioStructures.MolecularStructure(mmcifdict; structure_name=basename(path)); mmcifdict)
+end
+
 Base.read(path::AbstractString, P::Type{ProteinStructure{T}}, ::Type{PDBFormat}) where T = P(read(path, PDBFormat))
-Base.read(path::AbstractString, P::Type{<:ProteinStructure}) = read(path, P, get_format(path))
-Base.read(path::AbstractString, ::Type{ProteinStructure}, args...) = read(path, ProteinStructure{Float64}, args...)
+Base.read(path::AbstractString, P::Type{<:ProteinStructure}; kwargs...) = read(path, P, get_format(path); kwargs...)
+Base.read(path::AbstractString, ::Type{ProteinStructure}, args...; kwargs...) = read(path, ProteinStructure{Float64}, args...; kwargs...)
 
 readcif(path::AbstractString) = read(path, ProteinStructure, MMCIFFormat)
 readpdb(path::AbstractString) = read(path, ProteinStructure, PDBFormat)
