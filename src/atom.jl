@@ -7,7 +7,13 @@ const number_TO_ELEMENT_SYMBOL = Dict(n => s for (s, n) in ELEMENT_SYMBOL_TO_NUM
 element_symbol_to_number(element_symbol::AbstractString) = ELEMENT_SYMBOL_TO_NUMBER[uppercase(strip(element_symbol))]
 number_to_element_symbol(number::Integer) = number_TO_ELEMENT_SYMBOL[number]
 
-pad_atom_name(name::AbstractString, element_symbol::AbstractString) = rpad(" "^(2-length(strip(element_symbol)))*strip(name), 4)
+# "CA", "C" -> " CA "
+# "HA1", "H" -> " HA1"
+# "HD11", "H" -> "HD11"
+function pad_atom_name(name::AbstractString, element_symbol::AbstractString)
+    length(name) == 4 && return name
+    rpad(" "^(2-length(strip(element_symbol)))*strip(name), 4)
+end
 
 encode_atom_name(name::AbstractString, element_symbol::AbstractString) = reinterpret(UInt32, codeunits(pad_atom_name(name, element_symbol)))[1]
 decode_atom_name(name::UInt32) = String(reinterpret(UInt8, [name]))
