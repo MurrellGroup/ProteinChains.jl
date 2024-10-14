@@ -7,9 +7,6 @@ const number_TO_ELEMENT_SYMBOL = Dict(n => s for (s, n) in ELEMENT_SYMBOL_TO_NUM
 element_symbol_to_number(element_symbol::AbstractString) = ELEMENT_SYMBOL_TO_NUMBER[uppercase(strip(element_symbol))]
 number_to_element_symbol(number::Integer) = number_TO_ELEMENT_SYMBOL[number]
 
-# "CA", "C" -> " CA "
-# "HA1", "H" -> " HA1"
-# "HD11", "H" -> "HD11"
 function pad_atom_name(name::AbstractString, element_symbol::AbstractString)
     length(name) == 4 && return name
     rpad(" "^(2-length(strip(element_symbol)))*strip(name), 4)
@@ -35,8 +32,9 @@ Base.convert(::Type{Atom{T}}, atom::Atom) where T = Atom{T}(atom.name, atom.numb
 @inline Atom(name, number, coords::AbstractVector) = Atom(name, number, coords...)
 
 atom_name(atom::Atom) = decode_atom_name(atom.name)
-atom_number(atom::Atom) = number_to_element_symbol(atom.number)
+atom_number(atom::Atom) = atom.number
 atom_coords(atom::Atom) = SVector(atom.x, atom.y, atom.z)
+atom_symbol(atom::Atom) = number_to_element_symbol(atom.number)
 
 Base.summary(atom::Atom) = "$(elements[atom.number].name) atom at [$(atom.x), $(atom.y), $(atom.z)])"
 

@@ -11,7 +11,7 @@ export append_residue, prepend_residue
 
 include("atom.jl")
 export Atom
-@compat public (atom_name, atom_number, atom_coords)
+@compat public (atom_name, atom_number, atom_coords, atom_symbol)
 
 include("properties.jl")
 export PersistentProperty, IndexableProperty
