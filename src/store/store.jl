@@ -122,4 +122,4 @@ end
 Deserialize `ProteinStructure` objects from an HDF5 file.
 Returns a `Vector{ProteinStructure}` of all structures stored in the file.
 """
-deserialize(filename::AbstractString) = collect(values(ProteinStructureStore(filename, "r")))
+deserialize(filename::AbstractString) = ProteinStructureStore(collect ∘ values, filename, "r")
