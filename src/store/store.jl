@@ -76,7 +76,7 @@ end
 
 function Base.setindex!(store::ProteinStructureStore, value::ProteinStructure, key::AbstractString)
     store.mode == "r" && error("$ProteinStructureStore object is read-only.")
-    key in keys(store) && delete!(store, key)
+    haskey(store, key) && delete!(store, key)
     group = HDF5.create_group(store.file, key)
     writeh5(group, value)
     push!(store.keys, key)
@@ -92,14 +92,12 @@ end
 Base.show(io::IO, store::ProteinStructureStore) = print(io, "$ProteinStructureStore(\"$(store.filename)\", $(store.mode))")
 Base.show(io::IO, ::MIME"text/plain", store::ProteinStructureStore) = print(io, summary(store))
 
-function ProteinStructureStore(f::Function, args...)
-    store = ProteinStructureStore(args...)
-    try
-        return f(store)
-    finally
-        close(store)
-    end
-end
+Base.open(::Type{ProteinStructureStore}, filename::AbstractString, args...) = ProteinStructureStore(filename, args...)
+
+"""
+    ProteinStructureStore(f::Function, filename, mode="cw")
+"""
+ProteinStructureStore(f::Function, args...) = open(f, ProteinStructureStore, args...)
 
 """
     serialize(filename::AbstractString, structures::AbstractVector{<:ProteinStructure})
