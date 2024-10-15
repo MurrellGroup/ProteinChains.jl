@@ -1,7 +1,7 @@
 name = "ProteinChains"
 uuid = "b8e8f2a5-48d3-44f1-ba0d-c71cb7726ff8"
 authors = ["Anton Oresten <anton.oresten42@gmail.com> and contributors"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 AssigningSecondaryStructure = "8ed43e74-60fb-4e11-99b9-91deed37aef7"
