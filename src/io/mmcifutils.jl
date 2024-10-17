@@ -37,11 +37,3 @@ Dict{String, String} with 3 entries:
 """
 mapmmcif(mmcifdict, pairs::Pair{String,String}...) =
     mapreduce(((from,to),) -> map_first_occurrence(getmmcif(mmcifdict, from), getmmcif(mmcifdict, to)), compose_map, pairs)
-
-get_auth_asym_to_entity(mmcifdict) = mapmmcif(mmcifdict, "_atom_site.auth_asym_id" => "_atom_site.label_entity_id")
-
-function get_auth_asym_to_taxid(mmcifdict)
-    mapmmcif(mmcifdict,
-        "_atom_site.auth_asym_id"   => "_atom_site.label_entity_id",
-        "_entity_src_gen.entity_id" => "_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id")
-end
