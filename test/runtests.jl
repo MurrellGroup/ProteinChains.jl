@@ -85,7 +85,10 @@ using Test
             mktempdir() do dir
                 structure = pdbentry("3HFM"; dir)
                 mmcifdict = MMCIFDict(joinpath(dir, structure.name))
-                @test ProteinChains.get_auth_asym_to_taxid(mmcifdict) == Dict("Y" => "9031", "L" => "10090", "H" => "10090")
+                auth_asym_to_taxid = mapmmcif(mmcifdict,
+                    "_atom_site.auth_asym_id"   => "_atom_site.label_entity_id",
+                    "_entity_src_gen.entity_id" => "_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id")
+                @test auth_asym_to_taxid == Dict("Y" => "9031", "L" => "10090", "H" => "10090")
             end
         end
 
