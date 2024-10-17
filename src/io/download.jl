@@ -4,7 +4,7 @@ const MAX_CACHE_ENTRIES = 4
 const CACHE_DIR = Ref{Union{String,Nothing}}(nothing)
 
 function initialize_cache_dir()
-    if CACHE_DIR[] === nothing
+    if isnothing(CACHE_DIR[])
         CACHE_DIR[] = mktempdir(prefix="pdb_cache_")
         atexit(() -> rm(CACHE_DIR[], recursive=true))
     end
@@ -50,11 +50,17 @@ julia> pdb"1EYE"1 # integer suffix to specify "ba_number" keyword
  256-residue ProteinChain{Float64, @NamedTuple{}} (A-2)
 ```
 """
-function pdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
-    initialize_cache_dir()
-    path = BioStructures.downloadpdb(pdbid; dir=CACHE_DIR[], format=format, kwargs...)
-    manage_cache()
+function pdbentry(pdbid::AbstractString; dir=nothing, format=MMCIFFormat, kwargs...)
+    isnothing(dir) && return cached_pdbentry(pdbid; format, kwargs...)
+    path = BioStructures.downloadpdb(pdbid; dir, format, kwargs...)
     return read(path, ProteinStructure, format)
+end
+
+function cached_pdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
+    initialize_cache_dir()
+    structure = pdbentry(pdbid; dir=CACHE_DIR[], format, kwargs...)
+    manage_cache()
+    return structure
 end
 
 macro pdb_str(pdbid::AbstractString)
