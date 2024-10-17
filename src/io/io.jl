@@ -1,4 +1,6 @@
-using BioStructures: BioStructures, PDBFormat, MMCIFFormat
+using BioStructures: BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
+
+export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
 
 const ProteinFileFormat = Union{PDBFormat, MMCIFFormat}
 const AMINOACIDS = Set("ACDEFGHIKLMNPQRSTVWY")
@@ -18,3 +20,4 @@ include("renumber.jl")
 include("read.jl")
 include("write.jl")
 include("download.jl")
+include("mmcifutils.jl")

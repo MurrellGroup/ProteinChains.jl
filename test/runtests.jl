@@ -81,6 +81,14 @@ using Test
             @test chains[1].sequence == new_chains[1].sequence
         end
 
+        @testset "mmcifutils" begin
+            mktempdir() do dir
+                structure = pdbentry("3HFM"; dir)
+                mmcifdict = MMCIFDict(joinpath(dir, structure.name))
+                @test ProteinChains.get_auth_asym_to_taxid(mmcifdict) == Dict("Y" => "9031", "L" => "10090", "H" => "10090")
+            end
+        end
+
         # See https://proteopedia.org/wiki/index.php/Unusual_sequence_numbering
         @testset "Unusual numbering" begin
             
