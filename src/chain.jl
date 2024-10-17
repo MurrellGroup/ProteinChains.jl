@@ -8,7 +8,7 @@ The [`addproperties`](@ref) function can be used to instantiate new chains with 
 - `id::String`: Identifier for the protein chain.
 - `atoms::Vector{Vector{Atom{T}}}`: List of atoms in each residue.
 - `sequence::String`: Amino acid sequence of the protein.
-- `numbering::Vector{Int32}`: Residue numbering.
+- `numbering::Vector{Int32}`: Residue numbering (author). See [`renumber`](@ref) for renumbering.
 - `properties::Ps`: Named properties associated with the chain.
 
 See also [`addproperties`](@ref), [`PersistentProperty`](@ref), [`IndexableProperty`](@ref).
@@ -39,8 +39,11 @@ ProteinChain(id, atoms, sequence, numbering) = ProteinChain(id, atoms, sequence,
 Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
     ProteinChain(chain.id, convert(Vector{Vector{Atom{T}}}, chain.atoms), chain.sequence, chain.numbering, chain.properties)
 
-Base.:(==)(chain1::ProteinChain, chain2::ProteinChain) = propertynames(chain1) == propertynames(chain2) &&
-    !any(getproperty(chain1, name) != getproperty(chain2, name) for name in propertynames(chain1, false))
+function Base.:(==)(chain1::ProteinChain, chain2::ProteinChain)
+    sorted_names1 = sort!(collect(propertynames(chain1, false)))
+    sorted_names2 = sort!(collect(propertynames(chain2, false)))
+    sorted_names1 == sorted_names2 && !any(getproperty(chain1, name) != getproperty(chain2, name) for name in sorted_names1)
+end
 
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
@@ -54,6 +57,8 @@ function Base.getindex(chain::ProteinChain, i::AbstractVector)
     ProteinChain(chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], properties)
 end
 
+setproperties(chain::ProteinChain, ps::NamedProperties) = ProteinChain(chain.id, chain.atoms, chain.sequence, chain.numbering, ps)
+
 """
     addproperties(chain::ProteinChain; properties...)
 
@@ -63,11 +68,24 @@ them with `PersistentProperty` or `IndexableProperty`.
 
 Values get wrapped by `PersistentProperty` by default.
 
-See also [`PersistentProperty`](@ref), [`IndexableProperty`](@ref)
+See also [`removeproperties`](@ref), [`PersistentProperty`](@ref), [`IndexableProperty`](@ref)
 """
 function addproperties(chain::ProteinChain; properties...)
     properties = map(p -> p isa AbstractProperty ? p : PersistentProperty(p), NamedTuple(properties))
-    return ProteinChain(chain.id, chain.atoms, chain.sequence, chain.numbering, merge(chain.properties, properties))
+    setproperties(chain, merge(chain.properties, properties))
+end
+
+"""
+    removeproperties(chain::ProteinChain, names::Symbol...)
+
+Creates a new `ProteinChain` instance with the property names in `names` removed.
+
+See also [`addproperties`](@ref)
+"""
+function removeproperties(chain::ProteinChain, names::Symbol...)
+    new_propertynames = filter(name -> name ∉ names, propertynames(chain.properties))
+    properties = NamedTuple{new_propertynames}(chain.properties)
+    setproperties(chain, properties)
 end
 
 Base.summary(chain::ProteinChain) = "$(length(chain))-residue $(typeof(chain)) ($(chain.id))"

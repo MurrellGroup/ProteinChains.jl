@@ -49,6 +49,10 @@ using Test
     @testset "chain.jl" begin
         chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5))
         @test length(chain) == 5
+        chain = addproperties(chain, taxid=9606)
+        @test hasproperty(chain, :taxid)
+        chain = removeproperties(chain, :taxid)
+        @test !hasproperty(chain, :taxid)
     end
 
     @testset "structure.jl" begin
@@ -75,6 +79,52 @@ using Test
                 read(temp_path, ProteinStructure)
             end
             @test chains[1].sequence == new_chains[1].sequence
+        end
+
+        # See https://proteopedia.org/wiki/index.php/Unusual_sequence_numbering
+        @testset "Unusual numbering" begin
+            
+            @testset "Arbitrary Numbering" begin
+                structure = pdb"1BSZ"
+                @test !allequal(chain -> chain.numbering, structure)
+                @test allequal(chain -> chain.renumbering, structure)
+            end
+
+            @testset "N-Terminal Residues Missing Coordinates" begin
+                chain = pdb"1D66"A
+                @test chain.numbering[begin] == 8
+                @test chain.renumbering[begin] == 8
+            end
+
+            @testset "Starts With Zero Or Negative Numbers" begin
+                chain = pdb"1BXW"A
+                @test chain.numbering[begin] == 0
+                @test chain.renumbering[begin] == 1
+
+                chain = pdb"1D5T"A
+                @test chain.numbering[begin] == -2
+                @test chain.renumbering[begin] == 1
+            end
+
+            @testset "Insertion Codes" begin
+                chain = pdb"1IGY"B
+                @test count(==(82), chain.numbering) == 4
+                @test allunique(chain.renumbering)
+                @test Set(map(Char, unique(chain.ins_codes))) == Set([' ', 'A', 'B', 'C'])
+            end
+
+            @testset "Skipping Sequence Numbers" begin
+                chain = pdb"2ACE"A
+                @test any(!isone, chain.numbering[begin+1:end] - chain.numbering[begin:end-1])
+                @test chain.numbering == chain.renumbering
+            end
+
+            @testset "Not Monotonic" begin
+                chain = pdb"1NSA"A
+                @test issorted(chain.numbering) # BioStructures sorts automatically with `fixlists!`, so residues are in wrong order
+                @test !issorted(chain.renumbering) # the renumbering is not monotonic. it would be if BioStructures didn't sort.
+            end
+
         end
 
     end

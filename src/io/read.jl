@@ -30,7 +30,9 @@ function ProteinChain{T}(chain::BioStructures.Chain) where T
     atoms = get_atoms(Atom{T}, residues)
     sequence = get_sequence(residues)
     numbering = map(BioStructures.resnumber, residues)
-    return ProteinChain(id, atoms, sequence, numbering)
+    return addproperties(ProteinChain(id, atoms, sequence, numbering);
+        ins_codes = IndexableProperty(map(Int8 ∘ BioStructures.inscode, residues)),
+    )
 end
 
 function ProteinStructure{T}(struc::BioStructures.MolecularStructure; mmcifdict=nothing) where T
@@ -40,7 +42,12 @@ function ProteinStructure{T}(struc::BioStructures.MolecularStructure; mmcifdict=
         push!(proteinchains, ProteinChain{T}(chain))
     end
     proteinstructure = ProteinStructure(struc.name, atoms, proteinchains)
-    mmcifdict isa BioStructures.MMCIFDict && renumber!(proteinstructure, mmcifdict)
+    if !isnothing(mmcifdict)
+        chainwise_renumbering = renumber(proteinstructure, mmcifdict)
+        for (i, (proteinchain, renumbering)) in enumerate(zip(proteinstructure, chainwise_renumbering))
+            proteinstructure[i] = addproperties(proteinchain; renumbering)
+        end
+    end
     return proteinstructure
 end
 
