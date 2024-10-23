@@ -48,4 +48,6 @@ Base.getindex(p::IndexableProperty, i::AbstractVector) = selectdim(p.value, ndim
 
 const NamedProperties{names} = NamedTuple{names,<:Tuple{Vararg{AbstractProperty}}}
 
+sortnames(np::NamedProperties{names}) where names = NamedTuple{Tuple(sort(collect(names)))}(np)
+
 function addproperties end

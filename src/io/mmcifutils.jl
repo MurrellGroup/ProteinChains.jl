@@ -21,7 +21,7 @@ getmmcif(mmcifdict::AbstractDict{String,Vector{String}}, key::AbstractString) = 
 ```jldoctest
 julia> import BioStructures
 
-julia> filename BioStructures.downloadpdb("3HFM", format=BioStructures.MMCIFFormat);
+julia> filename = BioStructures.downloadpdb("3HFM", format=BioStructures.MMCIFFormat);
 [ Info: Downloading file from PDB: 3HFM
 
 julia> mmcifdict = BioStructures.MMCIFDict(filename);

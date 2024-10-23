@@ -14,35 +14,38 @@ The [`addproperties`](@ref) function can be used to instantiate new chains with 
 See also [`addproperties`](@ref), [`PersistentProperty`](@ref), [`IndexableProperty`](@ref).
 ```
 """
-struct ProteinChain{T<:Real,Ps<:NamedProperties}
+struct ProteinChain{T<:Real}
     id::String
     atoms::Vector{Vector{Atom{T}}}
     sequence::String
     numbering::Vector{Int32}
-    properties::Ps
+    properties::NamedProperties
+
+    function ProteinChain{T}(
+        id, atoms::Vector{Vector{Atom{T}}}, sequence::String, numbering::Vector{<:Integer}, properties::NamedProperties,
+    ) where T
+        len = length(atoms)
+        @assert sizeof(sequence) == len
+        @assert length(numbering) == len
+        for property in properties
+            property isa IndexableProperty && @assert size(property[], ndims(property[])) == len
+        end
+        new{T}(id, atoms, sequence, Int32.(numbering), sortnames(properties))
+    end
 end
 
-function ProteinChain(
-    id, atoms::Vector{Vector{Atom{T}}}, sequence::String, numbering::Vector{<:Integer}, properties::Ps,
-) where {T,Ps<:NamedProperties}
-    len = length(atoms)
-    @assert sizeof(sequence) == len
-    @assert length(numbering) == len
-    for property in properties
-        property isa IndexableProperty && @assert size(property[], ndims(property[])) == len
-    end
-    ProteinChain{T,Ps}(id, atoms, sequence, Int32.(numbering), properties)
-end
+ProteinChain(id, atoms::Vector{Vector{Atom{T}}}, sequence, numbering, properties) where T =
+    ProteinChain{T}(id, atoms, sequence, numbering, properties)
 
 ProteinChain(id, atoms, sequence, numbering) = ProteinChain(id, atoms, sequence, numbering, (;))
 
 Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
     ProteinChain(chain.id, convert(Vector{Vector{Atom{T}}}, chain.atoms), chain.sequence, chain.numbering, chain.properties)
 
+# cursor do your thing! don't sortnames cause we now ensure that the order of properties is consistent
 function Base.:(==)(chain1::ProteinChain, chain2::ProteinChain)
-    sorted_names1 = sort!(collect(propertynames(chain1, false)))
-    sorted_names2 = sort!(collect(propertynames(chain2, false)))
-    sorted_names1 == sorted_names2 && !any(getproperty(chain1, name) != getproperty(chain2, name) for name in sorted_names1)
+    propertynames(chain1, false) != propertynames(chain2, false) && return false
+    !any(getproperty(chain1, name) != getproperty(chain2, name) for name in propertynames(chain1, false))
 end
 
 Base.length(chain::ProteinChain) = length(chain.atoms)

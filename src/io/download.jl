@@ -19,12 +19,12 @@ function manage_cache()
     end
 end
 
-@doc raw"""
+"""
     pdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
 
 Keyword arguments get propagated to [`BioStructures.downloadpdb`](https://biojulia.dev/BioStructures.jl/stable/api/#BioStructures.downloadpdb-Tuple{AbstractString})
 
-Downloads are cached in a temporary directory up to $MAX_CACHE_ENTRIES times.
+Downloads are cached in a temporary directory.
 
 ## Examples
 
@@ -34,7 +34,7 @@ julia> pdbentry("1EYE")
 1-chain ProteinStructure{Float64} "1EYE.cif"
  256-residue ProteinChain{Float64, @NamedTuple{}} (A)
 
-julia> pdb"1EYE" # convenience macro
+julia> pdb"1EYE" # string macro for convenience
 [ Info: File exists: 1EYE
 1-chain ProteinStructure{Float64} "1EYE.cif"
  256-residue ProteinChain{Float64, @NamedTuple{}} (A)

@@ -5,7 +5,7 @@ function writeh5(group::HDF5.Group, chain::ProteinChain{T}) where T
 
     group["id"] = chain.id
     group["atom_chunk_sizes"] = map(UInt8∘length, chain.atoms)
-    group["atoms_flattened"] = reduce(vcat, chain.atoms)
+    group["atoms_flattened"] = reduce(vcat, chain.atoms; init=Atom{T}[])
     group["sequence"] = chain.sequence
     group["numbering"] = numbers_to_ranges(map(Int32, chain.numbering))
 

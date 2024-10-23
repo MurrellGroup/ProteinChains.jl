@@ -39,3 +39,11 @@ function renumber(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFDi
 
     return chainwise_renumbering
 end
+
+function renumber!(structure::ProteinStructure, mmcifdict)
+    chainwise_renumbering = renumber(structure, mmcifdict)
+    for (i, (chain, renumbering)) in enumerate(zip(structure, chainwise_renumbering))
+        structure[i] = addproperties(chain; renumbering)
+    end
+    return structure
+end

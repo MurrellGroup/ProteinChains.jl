@@ -68,7 +68,7 @@ Base.get(store::ProteinStructureStore, key, default) = key in keys(store) ? stor
 function Base.delete!(store::ProteinStructureStore, key::AbstractString)
     store.mode == "r" && error("$ProteinStructureStore object is read-only.")
     if haskey(store, key)
-        HDF5.delete_object(store.file, key)
+        HDF5.delete_object(store.file[key])
         delete!(store.keys, key)
     end
     return store
