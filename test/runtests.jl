@@ -58,8 +58,8 @@ using Test
     @testset "structure.jl" begin
         chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5))
         structure = ProteinStructure("1CHN", Atom{Float64}[], [chain, chain])
-        @test structure[1] === chain
-        @test structure["A"] === chain
+        @test structure[1] == chain
+        @test structure["A"] == chain
     end
 
     @testset "io" begin

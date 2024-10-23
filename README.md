@@ -21,31 +21,34 @@ The `ProteinChain` type is meant to only store a basic set of fields, from which
 julia> using ProteinChains
 
 julia> structure = pdb"1EYE" # string macro to fetch proteins from the PDB
-[ Info: Downloading file from PDB: 1EYE
-1-chain ProteinStructure "1EYE.cif"
- 256-residue ProteinChain{Float64, @NamedTuple{}} (A)
+[ Info: File exists: 1EYE
+1-chain ProteinStructure{Float64} "1EYE.cif"
+ 256-residue ProteinChain{Float64} (A)
+
+julia> chain = structure["A"]
+256-residue ProteinChain{Float64} (A)
 
 julia> propertynames(chain)
-(:id, :atoms, :sequence, :numbering)
+(:id, :atoms, :sequence, :numbering, :ins_codes, :modelnum, :renumbering)
 ```
 
 To store additional properties, `addproperties` can be used to attach persistent chain-level properties or indexable residue-level properties:
 
 ```julia
-julia> chain = structure["A"]
-256-residue ProteinChain{Float64, @NamedTuple{}} (A)
+julia> new_chain = addproperties(chain; taxid=83332)
+256-residue ProteinChain{Float64} (A)
 
-julia> new_chain = addproperties(chain; taxid=PersistentProperty(83332))
-256-residue ProteinChain{Float64, @NamedTuple{taxid::PersistentProperty{Int64}}} (A)
+julia> new_chain = addproperties(new_chain; rand3=IndexableProperty(rand(3,256))) # last dimension matches chain length
+256-residue ProteinChain{Float64} (A)
 
-julia> new_chain = addproperties(new_chain; some_residue_property=IndexableProperty(rand(3,256))) # last dimension gets indexed
-256-residue ProteinChain{Float64, @NamedTuple{taxid::PersistentProperty{Int64}, some_residue_property::IndexableProperty{Matrix{Float64}}}} (A)
-
-julia> new_chain[1:100].some_residue_property
+julia> new_chain[1:100].rand3
 3×100 Matrix{Float64}:
  0.273545  0.639173  0.92708   …  0.459441  0.196407  0.880034       
  0.981498  0.70263   0.279264     0.552049  0.89274   0.0328866      
  0.169268  0.117848  0.732741     0.301921  0.187094  0.281187
+
+julia> propertynames(new_chain)
+(:id, :atoms, :sequence, :numbering, :ins_codes, :modelnum, :rand3, :renumbering, :taxid)
 ```
 
 ## See also
