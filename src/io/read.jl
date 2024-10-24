@@ -25,12 +25,16 @@ end
 
 function ProteinChain{T}(chain::BioStructures.Chain) where T
     residues = BioStructures.collectresidues(chain, backbone_residue_selector)
-    isempty(residues) && return ProteinChain(BioStructures.chainid(chain), Vector{Atom{T}}[], "", Int[])
-    id = only(unique(map(BioStructures.chainid, residues)))
-    atoms = get_atoms(Atom{T}, residues)
-    sequence = get_sequence(residues)
-    numbering = map(BioStructures.resnumber, residues)
-    return addproperties(ProteinChain(id, atoms, sequence, numbering);
+    proteinchain = if isempty(residues)
+        ProteinChain(BioStructures.chainid(chain), Vector{Atom{T}}[], "", Int[])
+    else
+        id = only(unique(map(BioStructures.chainid, residues)))
+        atoms = get_atoms(Atom{T}, residues)
+        sequence = get_sequence(residues)
+        numbering = map(BioStructures.resnumber, residues)
+        ProteinChain(id, atoms, sequence, numbering)
+    end
+    return addproperties(proteinchain;
         modelnum = BioStructures.modelnumber(chain),
         ins_codes = IndexableProperty(map(Int8 ∘ BioStructures.inscode, residues)),
     )
