@@ -22,11 +22,22 @@ checkproperty(::Any, ::AbstractProperty) = nothing
 unpack(x) = x
 unpack(p::AbstractProperty) = p.value
 
+"""
+    StandardProperty
+
+    StandardProperty(value)
+
+A property with arbitrary type. The value is retained as is.
+
+This is the default property type for [`addproperties`](@ref).
+
+See also [`IndexableProperty`](@ref).
+"""
 struct StandardProperty{T} <: AbstractProperty
     value::T
 end
 
-Base.getindex(p::AbstractProperty, ::Any) = unpack(p)
+Base.getindex(p::StandardProperty, ::Any) = unpack(p)
 
 """
     IndexableProperty
