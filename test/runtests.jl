@@ -41,9 +41,7 @@ using Test
 
     @testset "properties.jl" begin
         value = rand(2, 3)
-        @test PersistentProperty(value)[1:2].value == value
         @test IndexableProperty(value)[1:2].value == value[:,1:2]
-        @test (; a=PersistentProperty(1), b=IndexableProperty([1])) isa ProteinChains.NamedProperties
     end
 
     @testset "chain.jl" begin

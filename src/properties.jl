@@ -1,27 +1,35 @@
+function setproperties end
+function addproperties end
+function removeproperties end
+
+sortnames(np::NamedTuple{names}) where names = NamedTuple{Tuple(sort(collect(names)))}(np)
+
+"""
+    AbstractProperty
+
+Abstract type for wrapped properties associated with a [`ProteinChain`](@ref) to define custom behavior.
+"""
 abstract type AbstractProperty end
 
-Base.getindex(p::AbstractProperty) = p.value
+const NamedProperties{names} = NamedTuple{names,<:Tuple{Vararg{AbstractProperty}}}
 
-"""
-    PersistentProperty(value)
+namedproperties(properties::NamedTuple) = map(properties) do value
+    value isa AbstractProperty ? value : StandardProperty(value)
+end
 
-A property of arbitrary type that persists after residue indexing of a chain.
+checkproperty(::Any, ::AbstractProperty) = nothing
 
-```jldoctest
-julia> chain = addproperties(pdb"1ASS"A; x=PersistentProperty(1));
+unpack(x) = x
+unpack(p::AbstractProperty) = p.value
 
-julia> chain.x == chain[1:10].x
-true
-```
-"""
-struct PersistentProperty{T} <: AbstractProperty
+struct StandardProperty{T} <: AbstractProperty
     value::T
 end
 
-Base.getindex(p::PersistentProperty, ::AbstractVector) = p
+Base.getindex(p::AbstractProperty, ::Any) = unpack(p)
 
 """
-    IndexableProperty <: AbstractProperty
+    IndexableProperty
 
     IndexableProperty(value::AbstractArray)
 
@@ -43,11 +51,11 @@ true
 struct IndexableProperty{T<:AbstractArray} <: AbstractProperty
     value::T
 end
+Base.getindex(p::IndexableProperty, i::Union{AbstractVector,Colon}) = selectdim(p.value, ndims(p.value), i) |> IndexableProperty
 
-Base.getindex(p::IndexableProperty, i::AbstractVector) = selectdim(p.value, ndims(p.value), i) |> IndexableProperty
-
-const NamedProperties{names} = NamedTuple{names,<:Tuple{Vararg{AbstractProperty}}}
-
-sortnames(np::NamedProperties{names}) where names = NamedTuple{Tuple(sort(collect(names)))}(np)
-
-function addproperties end
+function checkproperty(parent, p::IndexableProperty)
+    if size(p.value, ndims(p.value)) != length(parent)
+        throw(DimensionMismatch("Property $(p.value) has length $(size(p.value, ndims(p.value))) but parent has length $(length(parent))"))
+    end
+    return nothing
+end

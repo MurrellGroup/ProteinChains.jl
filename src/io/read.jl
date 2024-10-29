@@ -14,7 +14,7 @@ Base.convert(::Type{Atom{T}}, atom::BioStructures.Atom) where T = convert(Atom{T
 Base.convert(::Type{Atom{T}}, atom::BioStructures.DisorderedAtom) where T = convert(Atom{T}, BioStructures.defaultatom(atom))
 
 function get_atoms(::Type{Atom{T}}, residues::Vector{BioStructures.AbstractResidue}) where T
-    atoms = Vector{Atom{Float64}}[]
+    atoms = Vector{Atom{T}}[]
     for residue in residues
         residue = residue isa BioStructures.DisorderedResidue ? BioStructures.defaultresidue(residue) : residue
         residue_atoms = map(atom -> convert(Atom{T}, atom), BioStructures.collectatoms(residue))
@@ -28,26 +28,27 @@ function ProteinChain{T}(chain::BioStructures.Chain) where T
     proteinchain = if isempty(residues)
         ProteinChain(BioStructures.chainid(chain), Vector{Atom{T}}[], "", Int[])
     else
-        id = only(unique(map(BioStructures.chainid, residues)))
+        id = BioStructures.chainid(chain)
         atoms = get_atoms(Atom{T}, residues)
         sequence = get_sequence(residues)
         numbering = map(BioStructures.resnumber, residues)
         ProteinChain(id, atoms, sequence, numbering)
     end
     return addproperties(proteinchain;
-        modelnum = BioStructures.modelnumber(chain),
         ins_codes = IndexableProperty(map(Int8 ∘ BioStructures.inscode, residues)),
     )
 end
 
+function ProteinStructure{T}(model::BioStructures.Model) where T
+    return ProteinStructure(
+        model.structure.name,
+        map(atom -> convert(Atom{T}, atom), BioStructures.collectatoms(BioStructures.collectresidues(model, !backbone_residue_selector))),
+        [ProteinChain{T}(chain) for chain in model]
+    )
+end
+
 function ProteinStructure{T}(struc::BioStructures.MolecularStructure; mmcifdict=nothing) where T
-    proteinchains = ProteinChain{T}[]
-    atoms = map(atom -> convert(Atom{T}, atom), BioStructures.collectatoms(BioStructures.collectresidues(struc, !backbone_residue_selector)))
-    for model in struc, chain in model
-        push!(proteinchains, ProteinChain{T}(chain))
-    end
-    proteinstructure = ProteinStructure(struc.name, atoms, proteinchains)
-    !isnothing(mmcifdict) && renumber!(proteinstructure, mmcifdict)
+    proteinstructure = ProteinStructure{T}(first(BioStructures.collectmodels(struc)))
     return proteinstructure
 end
 

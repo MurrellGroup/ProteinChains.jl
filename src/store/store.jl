@@ -1,5 +1,6 @@
 import HDF5
 
+include("utils.jl")
 include("io.jl")
 
 """
@@ -50,6 +51,18 @@ Open or create an HDF5 file as a `ProteinStructureStore` where `mode` is one of:
 - "r+" read and write
 - "cw" read and write, create file if not existing, do not truncate
 - "w" read and write, create a new file (destroys any existing contents)
+
+## Structure attributes
+
+The `ProteinStructureStore` allows to store metadata about each structure in the file,
+that can be lazily read from the file without loading the structure into memory using [`read_attribute`](@ref).
+These attributes are only written to the file when the structure is written,
+and are not preserved in memory after the structure has been read.
+
+**Preset attributes:**
+- `T`: type of the coordinates in the structure.
+- `n_residues`: vector of number of residues per model in the structure.
+- `n_chains`: vector of number of chains per model in the structure.
 """
 function ProteinStructureStore(filename::AbstractString, mode::AbstractString="cw")
     file = HDF5.h5open(filename, mode)
@@ -62,7 +75,7 @@ Base.close(store::ProteinStructureStore) = close(store.file)
 
 Base.keys(store::ProteinStructureStore) = store.keys
 Base.length(store::ProteinStructureStore) = length(store.keys)
-Base.getindex(store::ProteinStructureStore, key::AbstractString) = readh5(store.file[key], ProteinStructure)
+Base.getindex(store::ProteinStructureStore, key::AbstractString) = read(store.file[key], ProteinStructure)
 Base.get(store::ProteinStructureStore, key, default) = key in keys(store) ? store[key] : default
 
 function Base.delete!(store::ProteinStructureStore, key::AbstractString)
@@ -78,15 +91,15 @@ function Base.setindex!(store::ProteinStructureStore, value::ProteinStructure, k
     store.mode == "r" && error("$ProteinStructureStore object is read-only.")
     haskey(store, key) && delete!(store, key)
     group = HDF5.create_group(store.file, key)
-    writeh5(group, value)
+    write(group, value)
     push!(store.keys, key)
     return store
 end
 
 function Base.iterate(store::ProteinStructureStore, state...)
-    process_iteration(::Nothing) = nothing
-    process_iteration((key,state)::Tuple{String,Int}) = (key => store[key], state)
-    return process_iteration(iterate(keys(store), state...))
+    iterate_step((key,state)::Tuple{String,Int}) = (key => store[key], state)
+    iterate_step(::Nothing) = nothing
+    return iterate_step(iterate(keys(store), state...))
 end
 
 Base.show(io::IO, store::ProteinStructureStore) = print(io, "$ProteinStructureStore(\"$(store.filename)\", $(store.mode))")
@@ -121,3 +134,31 @@ Deserialize `ProteinStructure` objects from an HDF5 file.
 Returns a `Vector{ProteinStructure}` of all structures stored in the file.
 """
 deserialize(filename::AbstractString) = ProteinStructureStore(collect ∘ values, filename, "r")
+
+"""
+    read_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString)
+
+Read metadata about a structure without loading the structure into memory.
+"""
+read_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString) =
+    read(HDF5.attributes(store.file[name])[attribute])
+
+"""
+    write_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value)
+
+Write metadata about a structure.
+"""
+write_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value) =
+    HDF5.attributes(store.file[name])[attribute] = value
+
+
+"""
+    readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
+
+Read a property from a chain in a structure.
+Chains are indexed from `1` to `length(store, name)`.
+"""
+readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol) =
+    readproperty(store.file[name]["chains"][string(index)], property)
+
+Base.length(store::ProteinStructureStore, name::AbstractString) = read_attribute(store, name, "n_chains")

@@ -1,49 +1,65 @@
-include("utils.jl")
+writeproperty(group::HDF5.Group, name::Symbol, value) = writeproperty(group, Val(name), value)
+readproperty(group::HDF5.Group, name::Symbol) = readproperty(group, Val(name))
 
-function writeh5(group::HDF5.Group, chain::ProteinChain{T}) where T
-    HDF5.attributes(group)["T"] = string(T)
+writeproperty(group::HDF5.Group, ::Val{name}, value) where name = write(group, string(name), value)
+readproperty(group::HDF5.Group, ::Val{name}) where name = read(group, string(name))
 
-    group["id"] = chain.id
-    group["atom_chunk_sizes"] = map(UInt8∘length, chain.atoms)
-    group["atoms_flattened"] = reduce(vcat, chain.atoms; init=Atom{T}[])
-    group["sequence"] = chain.sequence
-    group["numbering"] = numbers_to_ranges(map(Int32, chain.numbering))
+function writeproperty(group::HDF5.Group, ::Val{:atoms}, atoms::Vector{Vector{Atom{T}}}) where T
+    atoms_group = HDF5.create_group(group, "atoms")
+    write(atoms_group, "atom_chunk_sizes", map(UInt8∘length, atoms))
+    write(atoms_group, "atoms_flattened", reduce(vcat, atoms; init=Atom{T}[]))
+    return atoms_group
+end
 
-    indexable = HDF5.create_group(group, "indexable")
-    persistent = HDF5.create_group(group, "persistent")
-    for (name, property) in pairs(chain.properties)
-        g = property isa IndexableProperty ? indexable : persistent
-        g[string(name)] = property[]
+function readproperty(group::HDF5.Group, ::Val{:atoms})
+    T = eval(Symbol(read(HDF5.attributes(group)["T"])))
+    atoms_group = group["atoms"]
+    atom_chunk_sizes = read(atoms_group["atom_chunk_sizes"])
+    atoms_flattened = Atom{T}[Atom{T}(atom.name, atom.number, atom.x, atom.y, atom.z) for atom in read(atoms_group["atoms_flattened"])]
+    return [atoms_flattened[i-k+1:i] for (i, k) in zip(Iterators.accumulate(+, atom_chunk_sizes; init=0), atom_chunk_sizes)]
+end
+
+writeproperty(group::HDF5.Group, ::Val{:numbering}, numbering::Vector{Int32}) = write(group, "numbering", numbers_to_ranges(numbering))
+readproperty(group::HDF5.Group, ::Val{:numbering}) = mapreduce(range -> range.start:range.stop, vcat, read(group["numbering"]); init=Int32[])
+
+function writeproperty(group::HDF5.Group, ::Val{:properties}, properties::NamedTuple)
+    properties_group = HDF5.create_group(group, "properties")
+    subgroups = Dict{Symbol,HDF5.Group}()
+    for (name, property) in pairs(properties)
+        constructor = typeof(property).name.name
+        subgroup = get!(subgroups, constructor) do
+            HDF5.create_group(properties_group, string(constructor))
+        end
+        writeproperty(subgroup, name, unpack(property))
     end
+    return properties_group
+end
 
+function readproperty(group::HDF5.Group, ::Val{:properties})
+    properties_group = group["properties"]
+    constructors = Dict{String,Type}(constructor => eval(Symbol(constructor)) for constructor in keys(properties_group))
+    return merge(
+        (NamedTuple((Symbol(key) => constructors[constructor](readproperty(subgroup, Symbol(key))) for key in keys(subgroup)))
+        for (constructor, subgroup) in pairs(properties_group))...
+    )
+end
+
+function Base.write(group::HDF5.Group, chain::ProteinChain{T}) where T
+    HDF5.attributes(group)["T"] = string(T)
+    for fieldname in fieldnames(ProteinChain)
+        writeproperty(group, fieldname, getproperty(chain, fieldname))
+    end
     return group
 end
 
-function readh5(group::HDF5.Group, ::Type{ProteinChain})
-    T = eval(Symbol(read(HDF5.attributes(group)["T"])))
-    id = read(group["id"])
-    atom_chunk_sizes = read(group["atom_chunk_sizes"])
-    atoms_flattened = [Atom(atom.name, atom.number, atom.x, atom.y, atom.z) for atom in read(group["atoms_flattened"])]
-    sequence = read(group["sequence"])
-    numbering = mapreduce(range -> range.start:range.stop, vcat, read(group["numbering"]); init=Int32[])
-
-    atoms = Vector{Atom{T}}[]
-    for (i, k) in zip(Iterators.accumulate(+, atom_chunk_sizes; init=0), atom_chunk_sizes)
-        push!(atoms, atoms_flattened[i-k+1:i])
-    end
-
-    indexable = group["indexable"]
-    persistent = group["persistent"]
-    properties = merge(
-        NamedTuple((Symbol(key) => IndexableProperty(read(indexable[key])) for key in keys(group["indexable"]))),
-        NamedTuple((Symbol(key) => PersistentProperty(read(persistent[key])) for key in keys(group["persistent"])))
-    )
-
-    return ProteinChain(id, atoms, sequence, numbering, properties)
+function Base.read(group::HDF5.Group, ::Type{ProteinChain})
+    return splat(ProteinChain)(readproperty(group, fieldname) for fieldname in fieldnames(ProteinChain))
 end
 
-function writeh5(group::HDF5.Group, structure::ProteinStructure{T}) where T
+function Base.write(group::HDF5.Group, structure::ProteinStructure{T}) where T
     HDF5.attributes(group)["T"] = string(T)
+    HDF5.attributes(group)["n_residues"] = sum(length, structure)
+    HDF5.attributes(group)["n_chains"] = length(structure)
 
     group["name"] = structure.name
     group["atoms"] = structure.atoms
@@ -52,13 +68,13 @@ function writeh5(group::HDF5.Group, structure::ProteinStructure{T}) where T
 
     for (i, chain) in enumerate(structure.chains)
         chain_group = HDF5.create_group(chains_group, string(i))
-        writeh5(chain_group, chain)
+        write(chain_group, chain)
     end
 
     return group
 end
 
-function readh5(group::HDF5.Group, ::Type{ProteinStructure})
+function Base.read(group::HDF5.Group, ::Type{ProteinStructure})
     T = eval(Symbol(read(HDF5.attributes(group)["T"])))
     name = read(group["name"])
     atoms = [Atom(atom.name, atom.number, atom.x, atom.y, atom.z) for atom in read(group["atoms"])]
@@ -66,7 +82,7 @@ function readh5(group::HDF5.Group, ::Type{ProteinStructure})
     chains_group = group["chains"]
     chains = ProteinChain{T}[]
     for key in keys(chains_group)
-        chain = readh5(chains_group[key], ProteinChain)
+        chain = read(chains_group[key], ProteinChain)
         push!(chains, chain)
     end
 

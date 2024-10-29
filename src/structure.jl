@@ -23,14 +23,14 @@ Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
 
 Base.size(structure::ProteinStructure) = (length(structure.chains),)
 
-_chainid_to_index(structure::ProteinStructure, id::AbstractString) = findfirst(c -> c.id == id, structure.chains)
+chainid_to_index(structure::ProteinStructure, id::AbstractString) = findfirst(c -> c.id == id, structure.chains)
 
 Base.getindex(structure::ProteinStructure, i::Integer) = structure.chains[i]
-Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[_chainid_to_index(structure, id)]
+Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[chainid_to_index(structure, id)]
 Base.getindex(structure::ProteinStructure, is::AbstractVector) = ProteinStructure(structure.name, structure.atoms, map(i -> structure[i], is))
 
 Base.setindex!(structure::ProteinStructure, chain::ProteinChain, i::Integer) = (structure.chains[i] = chain)
-Base.setindex!(structure::ProteinStructure, chain::ProteinChain, id::AbstractString) = (structure.chains[_chainid_to_index(structure, id)] = chain)
+Base.setindex!(structure::ProteinStructure, chain::ProteinChain, id::AbstractString) = (structure.chains[chainid_to_index(structure, id)] = chain)
 
 Base.summary(structure::ProteinStructure) = "$(length(structure))-chain $(typeof(structure)) \"$(structure.name)\""
 

@@ -72,9 +72,10 @@ function BioStructures.MolecularStructure(proteinstruc::ProteinStructure)
     models = Dict{Int64, BioStructures.Model}()
     struc = BioStructures.MolecularStructure(proteinstruc.name, models)
     for proteinchain in proteinstruc
-        modelnum = hasproperty(proteinchain, :modelnum) ? proteinchain.modelnum : 1
-        modelnum in keys(models) || (models[modelnum] = BioStructures.Model(modelnum, Dict{String, BioStructures.Chain}(), struc))
-        model = models[modelnum]
+        modelnum = 1 # only supporting one model for now
+        model = get!(models, modelnum) do
+            BioStructures.Model(modelnum, Dict{String, BioStructures.Chain}(), struc)
+        end
         model.chains[proteinchain.id] = BioStructures.Chain(proteinchain, model)
     end
     return struc

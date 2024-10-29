@@ -1,4 +1,5 @@
 # convert e.g. numbers [1,2,3,6,7,8] to ranges [1:3, 6:8]
+# useful for compressing residue numbering, which often contain unit ranges
 function numbers_to_ranges(numbers::AbstractVector{T}) where T <: Integer
     isempty(numbers) && return UnitRange{T}[]
 
