@@ -51,12 +51,12 @@ julia> pdb"1EYE"1 # integer suffix to specify "ba_number" keyword
 ```
 """
 function pdbentry(pdbid::AbstractString; dir=nothing, format=MMCIFFormat, kwargs...)
-    isnothing(dir) && return cached_pdbentry(pdbid; format, kwargs...)
+    isnothing(dir) && return cachedpdbentry(pdbid; format, kwargs...)
     path = BioStructures.downloadpdb(pdbid; dir, format, kwargs...)
     return read(path, ProteinStructure, format)
 end
 
-function cached_pdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
+function cachedpdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
     initialize_cache_dir()
     structure = pdbentry(pdbid; dir=CACHE_DIR[], format, kwargs...)
     manage_cache()
@@ -73,4 +73,21 @@ end
 
 macro pdb_str(pdbid::AbstractString, ba_number::Integer)
     :(pdbentry($(esc(pdbid)), ba_number=$ba_number))
+end
+
+function getmmcifdict(pdbid::AbstractString; dir=nothing, kwargs...)
+    isnothing(dir) && return cachedmmcifdict(pdbid; kwargs...)
+    path = BioStructures.downloadpdb(pdbid; dir, format=MMCIFFormat, kwargs...)
+    return MMCIFDict(path)
+end
+
+function cachedmmcifdict(pdbid::AbstractString; kwargs...)
+    initialize_cache_dir()
+    mmcifdict = getmmcifdict(pdbid; dir=CACHE_DIR[], kwargs...)
+    manage_cache()
+    return mmcifdict
+end
+
+macro mmcifdict_str(pdbid::AbstractString, ba_number::Integer=0)
+    :(getmmcifdict($(esc(pdbid)), ba_number=$ba_number))
 end

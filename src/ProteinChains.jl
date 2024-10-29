@@ -31,7 +31,7 @@ export ProteinStructure
 include("io/io.jl")
 export readcif, readpdb
 export writecif, writepdb
-export pdbentry, @pdb_str
+export pdbentry, @pdb_str, @mmcifdict_str
 export getmmcif, mapmmcif
 export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
 
