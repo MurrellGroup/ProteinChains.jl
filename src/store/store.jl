@@ -55,7 +55,7 @@ Open or create an HDF5 file as a `ProteinStructureStore` where `mode` is one of:
 ## Structure attributes
 
 The `ProteinStructureStore` allows to store metadata about each structure in the file,
-that can be lazily read from the file without loading the structure into memory using [`read_attribute`](@ref).
+that can be lazily read from the file without loading the structure into memory using [`readattribute`](@ref).
 These attributes are only written to the file when the structure is written,
 and are not preserved in memory after the structure has been read.
 
@@ -136,21 +136,20 @@ Returns a `Vector{ProteinStructure}` of all structures stored in the file.
 deserialize(filename::AbstractString) = ProteinStructureStore(collect ∘ values, filename, "r")
 
 """
-    read_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString)
+    readattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString)
 
 Read metadata about a structure without loading the structure into memory.
 """
-read_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString) =
+readattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString) =
     read(HDF5.attributes(store.file[name])[attribute])
 
 """
-    write_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value)
+    writeattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value)
 
 Write metadata about a structure.
 """
-write_attribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value) =
+writeattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value) =
     HDF5.attributes(store.file[name])[attribute] = value
-
 
 """
     readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
@@ -161,4 +160,10 @@ Chains are indexed from `1` to `length(store, name)`.
 readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol) =
     readproperty(store.file[name]["chains"][string(index)], property)
 
-Base.length(store::ProteinStructureStore, name::AbstractString) = read_attribute(store, name, "n_chains")
+writeproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol, value) =
+    writeproperty(store.file[name]["chains"][string(index)], :properties, NamedTuple{(property,)}((value,)))
+
+deleteproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol) =
+    deleteproperty(store.file[name]["chains"][string(index)], Val(:properties), property)
+
+Base.length(store::ProteinStructureStore, name::AbstractString) = readattribute(store, name, "n_chains")

@@ -1,8 +1,12 @@
+function writeproperty(group::HDF5.Group, ::Val{name}, value) where name
+    haskey(group, string(name)) && HDF5.delete_object(group[string(name)])
+    return write(group, string(name), value)
+end
+
+readproperty(group::HDF5.Group, ::Val{name}) where name = read(group, string(name))
+
 writeproperty(group::HDF5.Group, name::Symbol, value) = writeproperty(group, Val(name), value)
 readproperty(group::HDF5.Group, name::Symbol) = readproperty(group, Val(name))
-
-writeproperty(group::HDF5.Group, ::Val{name}, value) where name = write(group, string(name), value)
-readproperty(group::HDF5.Group, ::Val{name}) where name = read(group, string(name))
 
 function writeproperty(group::HDF5.Group, ::Val{:atoms}, atoms::Vector{Vector{Atom{T}}}) where T
     atoms_group = HDF5.create_group(group, "atoms")
@@ -23,8 +27,9 @@ writeproperty(group::HDF5.Group, ::Val{:numbering}, numbering::Vector{Int32}) = 
 readproperty(group::HDF5.Group, ::Val{:numbering}) = mapreduce(range -> range.start:range.stop, vcat, read(group["numbering"]); init=Int32[])
 
 function writeproperty(group::HDF5.Group, ::Val{:properties}, properties::NamedTuple)
-    properties_group = HDF5.create_group(group, "properties")
-    subgroups = Dict{Symbol,HDF5.Group}()
+    properties = namedproperties(properties)
+    properties_group = haskey(group, "properties") ? group["properties"] : HDF5.create_group(group, "properties")
+    subgroups = Dict{Symbol,HDF5.Group}(Symbol(constructor) => subgroup for (constructor, subgroup) in pairs(properties_group))
     for (name, property) in pairs(properties)
         constructor = typeof(property).name.name
         subgroup = get!(subgroups, constructor) do
@@ -42,6 +47,16 @@ function readproperty(group::HDF5.Group, ::Val{:properties})
         (NamedTuple((Symbol(key) => constructors[constructor](readproperty(subgroup, Symbol(key))) for key in keys(subgroup)))
         for (constructor, subgroup) in pairs(properties_group))...
     )
+end
+
+function deleteproperty(group::HDF5.Group, ::Val{:properties}, names::Symbol...)
+    properties_group = group["properties"]
+    for name in names
+        for subgroup in values(properties_group)
+            haskey(subgroup, string(name)) && HDF5.delete_object(subgroup[string(name)])
+        end
+    end
+    return group
 end
 
 function Base.write(group::HDF5.Group, chain::ProteinChain{T}) where T
@@ -81,7 +96,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinStructure})
 
     chains_group = group["chains"]
     chains = ProteinChain{T}[]
-    for key in keys(chains_group)
+    for key in sort(collect(keys(chains_group)), by=k->parse(Int, k))
         chain = read(chains_group[key], ProteinChain)
         push!(chains, chain)
     end

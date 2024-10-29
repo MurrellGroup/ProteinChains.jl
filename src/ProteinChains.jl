@@ -26,6 +26,7 @@ export get_atoms, get_backbone
 
 include("structure.jl")
 export ProteinStructure
+@compat public renumber!
 
 include("io/io.jl")
 export readcif, readpdb
@@ -37,5 +38,7 @@ export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
 include("store/store.jl")
 export ProteinStructureStore
 @compat public (serialize, deserialize)
+@compat public (readattribute, writeattribute)
+@compat public (readproperty, writeproperty, deleteproperty)
 
 end
