@@ -15,7 +15,7 @@ export Atom
 
 include("properties.jl")
 export StandardProperty, IndexableProperty
-export addproperties, removeproperties
+export setproperties, addproperties, removeproperties
 @compat public AbstractProperty
 
 include("chain.jl")
@@ -26,7 +26,6 @@ export get_atoms, get_backbone
 
 include("structure.jl")
 export ProteinStructure
-@compat public renumber!
 
 include("io/io.jl")
 export readcif, readpdb
@@ -34,6 +33,7 @@ export writecif, writepdb
 export pdbentry, @pdb_str, @mmcifdict_str
 export getmmcif, mapmmcif
 export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
+@compat public renumber
 
 include("store/store.jl")
 export ProteinStructureStore

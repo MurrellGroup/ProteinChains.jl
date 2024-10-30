@@ -3,8 +3,9 @@
 
 ## Fields
 - `name::String`: Usually just the base name of the original file.
-- `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein chain.
-- `chains::Vector{<:ProteinChain{T}}`: a collection of `ProteinChain`s.
+- `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein residue.
+- `chains::Vector{ProteinChain{T}}`: a collection of `ProteinChain`s.
+- `properties::NamedProperties`: arbitrary properties.
 
 ## Examples
 
@@ -15,8 +16,16 @@ julia> structure = pdb"1ASS"
 struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
     name::String
     atoms::Vector{Atom{T}}
-    chains::Vector{<:ProteinChain{T}}
+    chains::Vector{ProteinChain{T}}
+    properties::NamedProperties
+
+    function ProteinStructure{T}(name, atoms, chains, properties) where T
+        return new{T}(name, atoms, chains, sortnames(namedproperties(properties)))
+    end
 end
+
+ProteinStructure(name, atoms::Vector{Atom{T}}, chains, properties=(;)) where T =
+    ProteinStructure{T}(name, atoms, chains, properties)
 
 Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
     ProteinStructure(structure.name, convert(Vector{Atom{T}}, structure.atoms), convert(Vector{ProteinChain{T}}, structure.chains))
@@ -38,7 +47,7 @@ function Base.show(io::IO, structure::ProteinStructure)
     print(io, "$(typeof(structure))(")
     for fieldname in fieldnames(ProteinStructure)
         show(io, getfield(structure, fieldname))
-        fieldname != :chains && print(io, ", ")
+        fieldname != :properties && print(io, ", ")
     end
     print(io, ")")
 end
@@ -60,5 +69,11 @@ function map_atoms!(f::Function, structure::ProteinStructure, args...)
     return structure
 end
 
-addproperties(structure::ProteinStructure, names::Symbol...) =
-    ProteinStructure(structure.name, structure.atoms, addproperties.(structure.chains, names...))
+setproperties(structure::ProteinStructure, properties::NamedTuple) =
+    ProteinStructure(structure.name, structure.atoms, structure.chains, setproperties(structure.properties, properties))
+
+addproperties(structure::ProteinStructure, properties::NamedTuple) =
+    setproperties(structure, addproperties(structure.properties, properties))
+
+removeproperties(structure::ProteinStructure, names::Symbol...) =
+    setproperties(structure, removeproperties(structure.properties, names...))

@@ -1,7 +1,3 @@
-function setproperties end
-function addproperties end
-function removeproperties end
-
 sortnames(np::NamedTuple{names}) where names = NamedTuple{Tuple(sort(collect(names)))}(np)
 
 """
@@ -16,6 +12,13 @@ const NamedProperties{names} = NamedTuple{names,<:Tuple{Vararg{AbstractProperty}
 namedproperties(properties::NamedTuple) = map(properties) do value
     value isa AbstractProperty ? value : StandardProperty(value)
 end
+
+setproperties(properties::NamedProperties, newproperties::NamedTuple) =
+    newproperties |> namedproperties
+addproperties(properties::NamedProperties, newproperties::NamedTuple) =
+    merge(properties, newproperties |> namedproperties)
+removeproperties(properties::NamedProperties, names::Symbol...) =
+    NamedTuple{filter(name -> name ∉ names, propertynames(properties))}(properties)
 
 checkproperty(::Any, ::AbstractProperty) = nothing
 

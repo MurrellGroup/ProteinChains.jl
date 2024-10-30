@@ -54,7 +54,7 @@ Open or create an HDF5 file as a `ProteinStructureStore` where `mode` is one of:
 
 ## Structure attributes
 
-The `ProteinStructureStore` allows to store metadata about each structure in the file,
+The `ProteinStructureStore` type allows for storing metadata about each structure in the file,
 that can be lazily read from the file without loading the structure into memory using [`readattribute`](@ref).
 These attributes are only written to the file when the structure is written,
 and are not preserved in memory after the structure has been read.
@@ -157,12 +157,28 @@ writeattribute(store::ProteinStructureStore, name::AbstractString, attribute::Ab
 Read a property from a chain in a structure.
 Chains are indexed from `1` to `length(store, name)`.
 """
-readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol) =
-    readproperty(store.file[name]["chains"][string(index)], property)
+function readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
+    T = eval(Symbol(readattribute(store, name, "T")))
+    return readproperty(store.file[name]["chains"][string(index)], ProteinChain{T}, Val(property))
+end
 
-writeproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol, value) =
-    writeproperty(store.file[name]["chains"][string(index)], :properties, NamedTuple{(property,)}((value,)))
+"""
+    writeproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol, value)
 
+Write a property to a chain in a structure.
+Chains are indexed from `1` to `length(store, name)`.
+"""
+function writeproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol, value)
+    T = eval(Symbol(readattribute(store, name, "T")))
+    return writeproperty(store.file[name]["chains"][string(index)], ProteinChain{T}, Val(:properties), NamedTuple{(property,)}((value,)))
+end
+
+"""
+    deleteproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
+
+Delete a property from a chain in a structure.
+Chains are indexed from `1` to `length(store, name)`.
+"""
 deleteproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol) =
     deleteproperty(store.file[name]["chains"][string(index)], Val(:properties), property)
 

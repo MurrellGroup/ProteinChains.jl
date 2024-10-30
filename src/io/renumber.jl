@@ -1,14 +1,6 @@
 const missingvals = Set([".", "?"])
 
-"""
-    renumber(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFDict)
-
-Return residue numbers from "_atom_site.label_seq_ids".
-
-The `ProteinStructure` will automatically add a `renumbering` property if
-an MMCIFDict is passed (default if the file is an MMCIF).
-"""
-function renumber(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFDict)
+function _renumber(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFDict)
     label_seq_ids = mmcif_dict["_atom_site.label_seq_id"]
     pdbx_PDB_ins_codes = mmcif_dict["_atom_site.pdbx_PDB_ins_code"]
     auth_seq_ids = mmcif_dict["_atom_site.auth_seq_id"]
@@ -32,16 +24,24 @@ function renumber(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFDi
             continue
         end
         renumbering_str = map(
-            (resnum, ins_code) -> parse(Int32, get(label_seq_id_dict, chain.id*string(resnum)*ins_code, "-1")), chain.numbering,
-            hasproperty(chain, :ins_codes) ? Iterators.map(Char, chain.ins_codes) : Iterators.repeated(' '))
+            (resnum, ins_code) -> parse(Int32, get(label_seq_id_dict, chain.id*string(resnum)*ins_code, "-1")),
+            chain.numbering, chain.ins_codes)
         push!(chainwise_renumbering, renumbering_str)
     end
 
     return chainwise_renumbering
 end
 
-function renumber!(structure::ProteinStructure, mmcifdict)
-    chainwise_renumbering = renumber(structure, mmcifdict)
+"""
+    renumber(structure::ProteinStructure, mmcif_dict::BioStructures.MMCIFDict)
+
+Return residue numbers from "_atom_site.label_seq_ids".
+
+The `ProteinStructure` will automatically add a `renumbering` property if
+an MMCIFDict is passed (default if the file is an MMCIF).
+"""
+function renumber(structure::ProteinStructure, mmcifdict)
+    chainwise_renumbering = _renumber(structure, mmcifdict)
     for (i, (chain, renumbering)) in enumerate(zip(structure, chainwise_renumbering))
         structure[i] = addproperties(chain; renumbering)
     end

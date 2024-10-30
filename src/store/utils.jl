@@ -1,3 +1,18 @@
+struct InsertionCode
+    index::UInt16
+    code::UInt8
+end
+
+encode_ins_codes(ins_codes::String) = filter(code -> code.code != 0x20, map(splat(InsertionCode), enumerate(codeunits(ins_codes))))
+
+function decode_ins_codes(ins_codes, len::Integer)
+    data = fill(0x20, len)
+    for code in ins_codes
+        data[code.index] = code.code
+    end
+    return String(data)
+end
+
 # convert e.g. numbers [1,2,3,6,7,8] to ranges [1:3, 6:8]
 # useful for compressing residue numbering, which often contain unit ranges
 function numbers_to_ranges(numbers::AbstractVector{T}) where T <: Integer

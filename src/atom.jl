@@ -15,7 +15,7 @@ end
 encode_atom_name(name::AbstractString, element_symbol::AbstractString) = reinterpret(UInt32, codeunits(pad_atom_name(name, element_symbol)))[1]
 decode_atom_name(name::UInt32) = String(reinterpret(UInt8, [name]))
 
-struct Atom{T<:AbstractFloat}
+struct Atom{T<:Real}
     name::UInt32
     number::Int8
     x::T
@@ -35,6 +35,7 @@ atom_name(atom::Atom) = decode_atom_name(atom.name)
 atom_number(atom::Atom) = atom.number
 atom_coords(atom::Atom) = SVector(atom.x, atom.y, atom.z)
 atom_symbol(atom::Atom) = number_to_element_symbol(atom.number)
+atom_mass(atom::Atom) = elements[atom_number(atom)].atomic_mass
 
 Base.summary(atom::Atom) = "$(elements[atom.number].name) atom at [$(atom.x), $(atom.y), $(atom.z)])"
 
