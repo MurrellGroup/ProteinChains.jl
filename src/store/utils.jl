@@ -1,11 +1,8 @@
-struct InsertionCode
-    index::UInt16
-    code::UInt8
-end
+const InsertionCode = NamedTuple{(:index, :code), Tuple{UInt16, UInt8}}
 
-encode_ins_codes(ins_codes::String) = filter(code -> code.code != 0x20, map(splat(InsertionCode), enumerate(codeunits(ins_codes))))
+encode_ins_codes(ins_codes::String) = filter(code -> code.code != 0x20, map(InsertionCode, enumerate(codeunits(ins_codes))))
 
-function decode_ins_codes(ins_codes, len::Integer)
+function decode_ins_codes(ins_codes::Vector{InsertionCode}, len::Integer)
     data = fill(0x20, len)
     for code in ins_codes
         data[code.index] = code.code

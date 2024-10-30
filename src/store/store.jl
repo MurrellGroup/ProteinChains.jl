@@ -59,7 +59,6 @@ that can be lazily read from the file without loading the structure into memory 
 These attributes are only written to the file when the structure is written,
 and are not preserved in memory after the structure has been read.
 
-**Preset attributes:**
 - `T`: type of the coordinates in the structure.
 - `n_residues`: vector of number of residues per model in the structure.
 - `n_chains`: vector of number of chains per model in the structure.

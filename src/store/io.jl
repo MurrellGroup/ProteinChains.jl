@@ -100,15 +100,12 @@ function readproperty(group::HDF5.Group, ::Type{ProteinStructure{T}}, ::Val{:cha
 end
 
 function Base.write(group::HDF5.Group, structure::ProteinStructure{T}) where T
-    attributes = HDF5.attributes(group)
-    attributes["T"] = string(T)
-    attributes["n_residues"] = sum(length, structure)
-    attributes["n_chains"] = length(structure)
-
+    HDF5.attributes(group)["T"] = string(T)
+    HDF5.attributes(group)["n_residues"] = sum(length, structure)
+    HDF5.attributes(group)["n_chains"] = length(structure)
     for fieldname in fieldnames(ProteinStructure)
         writeproperty(group, ProteinStructure{T}, Val(fieldname), getproperty(structure, fieldname))
     end
-
     return group
 end
 

@@ -6,12 +6,6 @@
 - `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein residue.
 - `chains::Vector{ProteinChain{T}}`: a collection of `ProteinChain`s.
 - `properties::NamedProperties`: arbitrary properties.
-
-## Examples
-
-```jldoctest
-julia> structure = pdb"1ASS"
-```
 """
 struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
     name::String
