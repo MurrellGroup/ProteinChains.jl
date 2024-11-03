@@ -63,11 +63,19 @@ function map_atoms!(f::Function, structure::ProteinStructure, args...)
     return structure
 end
 
+Base.getproperty(structure::ProteinStructure, name::Symbol) =
+    name in fieldnames(ProteinStructure) ? getfield(structure, name) : unpack(getfield(getfield(structure, :properties), name))
+
+Base.propertynames(structure::ProteinStructure, private::Bool=false) = (setdiff(fieldnames(ProteinStructure), private ? () : (:properties,))..., propertynames(structure.properties)...)
+
 setproperties(structure::ProteinStructure, properties::NamedTuple) =
     ProteinStructure(structure.name, structure.atoms, structure.chains, setproperties(structure.properties, properties))
 
 addproperties(structure::ProteinStructure, properties::NamedTuple) =
     setproperties(structure, addproperties(structure.properties, properties))
+
+addproperties(structure::ProteinStructure; properties...) =
+    setproperties(structure, addproperties(structure.properties, NamedTuple(properties)))
 
 removeproperties(structure::ProteinStructure, names::Symbol...) =
     setproperties(structure, removeproperties(structure.properties, names...))

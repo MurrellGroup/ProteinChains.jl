@@ -14,7 +14,6 @@ const pdbextension_to_format = Dict(ext => format for (format, ext) in BioStruct
 
 get_format(path::AbstractString) = get(pdbextension_to_format, lowercase(last(splitext(path))[2:end]), PDBFormat)
 
-include("renumber.jl")
 include("read.jl")
 include("write.jl")
 include("download.jl")

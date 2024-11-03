@@ -4,19 +4,13 @@ using Backboner
 
 using Compat: @compat
 
-include("ideal.jl")
-export BackboneGeometry
-export IdealResidue, STANDARD_RESIDUE
-export append_residue, prepend_residue
-
 include("atom.jl")
 export Atom
-@compat public (atom_name, atom_number, atom_coords, atom_symbol)
+@compat public (atom_name, atom_number, atom_coords, atom_symbol, atom_mass)
 
 include("properties.jl")
-export StandardProperty, IndexableProperty
+export AbstractProperty, StandardProperty, IndexableProperty
 export setproperties, addproperties, removeproperties
-@compat public AbstractProperty
 
 include("chain.jl")
 export ProteinChain

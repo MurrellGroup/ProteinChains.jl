@@ -58,15 +58,15 @@ end
 
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
-Base.getproperty(chain::ProteinChain, name::Symbol) =
-    name in fieldnames(ProteinChain) ? getfield(chain, name) : unpack(getfield(getfield(chain, :properties), name))
-
-Base.propertynames(chain::ProteinChain, private::Bool=false) = (setdiff(fieldnames(ProteinChain), private ? () : (:properties,))..., propertynames(chain.properties)...)
-
 function Base.getindex(chain::ProteinChain, i::Union{AbstractVector,Colon})
     properties = map(p -> p[i], chain.properties)
     ProteinChain(chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], properties)
 end
+
+Base.getproperty(chain::ProteinChain, name::Symbol) =
+    name in fieldnames(ProteinChain) ? getfield(chain, name) : unpack(getfield(getfield(chain, :properties), name))
+
+Base.propertynames(chain::ProteinChain, private::Bool=false) = (setdiff(fieldnames(ProteinChain), private ? () : (:properties,))..., propertynames(chain.properties)...)
 
 setproperties(chain::ProteinChain, ps::NamedTuple) =
     ProteinChain(chain.id, chain.atoms, chain.sequence, chain.ins_codes, chain.numbering, setproperties(chain.properties, ps))
