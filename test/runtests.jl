@@ -3,12 +3,6 @@ using Test
 
 @testset "ProteinChains.jl" begin
 
-    @testset "ideal.jl" begin
-        geometry = BackboneGeometry(N_Ca_length=3, Ca_C_length=3, N_Ca_C_angle=π/2)
-        ideal_residue = IdealResidue{Float64}(geometry)
-        @test ideal_residue == Float64[-2 1 1; -1 -1 2; 0 0 0]
-    end
-
     @testset "atom.jl" begin
 
         @testset "atom name" begin

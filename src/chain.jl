@@ -2,7 +2,7 @@
     ProteinChain{T<:Real}
 
 Represents a protein chain with a basic set of fields from which some other properties might be derived.
-The [`addproperties`](@ref) function can be used to instantiate new chains with additional properties.
+The [`addproperties!`](@ref) function can be used to add additional properties.
 
 ## Fields
 - `id::String`: Identifier for the protein chain.
@@ -12,10 +12,10 @@ The [`addproperties`](@ref) function can be used to instantiate new chains with 
 - `numbering::Vector{Int32}`: Residue numbering (author). See [`renumber`](@ref) for renumbering.
 - `properties::ProteinChains.NamedProperties`: Named properties associated with the chain.
 
-See also [`addproperties`](@ref), [`StandardProperty`](@ref), [`IndexableProperty`](@ref).
+See also [`addproperties!`](@ref), [`StandardProperty`](@ref), [`IndexableProperty`](@ref).
 ```
 """
-struct ProteinChain{T<:Real}
+mutable struct ProteinChain{T<:Real}
     id::String
     atoms::Vector{Vector{Atom{T}}}
     sequence::String
@@ -45,7 +45,7 @@ function ProteinChain{T}(id, atoms, sequence, ins_codes, numbering::Vector{<:Int
 end
 
 function ProteinChain(id, atoms::Vector{Vector{Atom{T}}}, sequence, ins_codes=String(fill(0x40, length(sequence))), numbering=collect(1:length(sequence)), properties=(;)) where T
-    ProteinChain{T}(id, atoms, sequence, ins_codes, Int32.(numbering), namedproperties(properties))
+    ProteinChain{T}(id, atoms, sequence, ins_codes, numbering, properties)
 end
 
 Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
@@ -60,7 +60,7 @@ Base.length(chain::ProteinChain) = length(chain.atoms)
 
 function Base.getindex(chain::ProteinChain, i::Union{AbstractVector,Colon})
     properties = map(p -> p[i], chain.properties)
-    ProteinChain(chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], properties)
+    ProteinChain(chain.id, chain.atoms[i], chain.sequence[i], chain.ins_codes[i], chain.numbering[i], properties)
 end
 
 Base.getproperty(chain::ProteinChain, name::Symbol) =
@@ -68,12 +68,14 @@ Base.getproperty(chain::ProteinChain, name::Symbol) =
 
 Base.propertynames(chain::ProteinChain, private::Bool=false) = (setdiff(fieldnames(ProteinChain), private ? () : (:properties,))..., propertynames(chain.properties)...)
 
-setproperties(chain::ProteinChain, ps::NamedTuple) =
-    ProteinChain(chain.id, chain.atoms, chain.sequence, chain.ins_codes, chain.numbering, setproperties(chain.properties, ps))
+function setproperties!(chain::ProteinChain, ps::NamedTuple)
+    chain.properties = setproperties(chain.properties, ps)
+    chain
+end
 
 """
-    addproperties(chain::ProteinChain, properties::NamedTuple)
-    addproperties(chain::ProteinChain; properties...)
+    addproperties!(chain::ProteinChain, properties::NamedTuple)
+    addproperties!(chain::ProteinChain; properties...)
 
 Creates a new `ProteinChain` instance with the added properties.
 Indexing of property values can be specified with a wrapper type,
@@ -81,17 +83,17 @@ such as `IndexableProperty`.
 
 See also [`removeproperties`](@ref), [`IndexableProperty`](@ref).
 """
-addproperties(chain::ProteinChain, properties::NamedTuple) = setproperties(chain, addproperties(chain.properties, properties))
-addproperties(chain::ProteinChain; properties...) = setproperties(chain, addproperties(chain.properties, NamedTuple(properties)))
+addproperties!(chain::ProteinChain, properties::NamedTuple) = setproperties!(chain, addproperties(chain.properties, properties))
+addproperties!(chain::ProteinChain; properties...) = setproperties!(chain, addproperties(chain.properties, NamedTuple(properties)))
 
 """
-    removeproperties(chain::ProteinChain, names::Symbol...)
+    removeproperties!(chain::ProteinChain, names::Symbol...)
 
 Creates a new `ProteinChain` instance with the property names in `names` removed.
 
-See also [`addproperties`](@ref)
+See also [`addproperties!`](@ref)
 """
-removeproperties(chain::ProteinChain, names::Symbol...) = setproperties(chain, removeproperties(chain.properties, names...))
+removeproperties!(chain::ProteinChain, names::Symbol...) = setproperties!(chain, removeproperties(chain.properties, names...))
 
 Base.summary(chain::ProteinChain) = "$(length(chain))-residue $(typeof(chain)) ($(chain.id))"
 

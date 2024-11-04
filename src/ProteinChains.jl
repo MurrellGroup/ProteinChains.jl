@@ -10,6 +10,7 @@ export Atom
 
 include("properties.jl")
 export AbstractProperty, StandardProperty, IndexableProperty
+export setproperties!, addproperties!, removeproperties!
 export setproperties, addproperties, removeproperties
 
 include("chain.jl")

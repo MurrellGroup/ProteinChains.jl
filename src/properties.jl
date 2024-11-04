@@ -20,6 +20,14 @@ addproperties(properties::NamedProperties, newproperties::NamedTuple) =
 removeproperties(properties::NamedProperties, names::Symbol...) =
     NamedTuple{filter(name -> name ∉ names, propertynames(properties))}(properties)
 
+function setproperties! end
+function addproperties! end
+function removeproperties! end
+
+setproperties(x, args...) = setproperties!(deepcopy(x), args...)
+addproperties(x, args...; kwargs...) = addproperties!(deepcopy(x), args...; kwargs...)
+removeproperties(x, args...) = removeproperties!(deepcopy(x), args...)
+
 checkproperty(::Any, ::AbstractProperty) = nothing
 
 unpack(x) = x
@@ -32,7 +40,7 @@ unpack(p::AbstractProperty) = p.value
 
 A property with arbitrary type. The value is retained as is.
 
-This is the default property type for [`addproperties`](@ref).
+This is the default property type for [`addproperties!`](@ref).
 
 See also [`IndexableProperty`](@ref).
 """
@@ -53,7 +61,7 @@ residue indexing of the chain being propagated to the last dimension of the arra
 ```jldoctest
 julia> chain = pdb"1ASS"A;
 
-julia> chain = addproperties(pdb"1ASS"A; y=IndexableProperty(rand(2,152)));
+julia> addproperties!(pdb"1ASS"A; y=IndexableProperty(rand(2,152)));
 
 julia> chain.y == chain[1:10].y
 false

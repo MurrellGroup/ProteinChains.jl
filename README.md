@@ -32,13 +32,13 @@ julia> propertynames(chain)
 (:id, :atoms, :sequence, :numbering, :ins_codes, :renumbering)
 ```
 
-To store additional properties, `addproperties` can be used to attach persistent chain-level properties or indexable residue-level properties:
+To store additional properties, `addpropertie!s` can be used to attach persistent chain-level properties or indexable residue-level properties:
 
 ```julia
-julia> new_chain = addproperties(chain; taxid=83332)
+julia> addproperties!(chain; taxid=83332)
 256-residue ProteinChain{Float64} (A)
 
-julia> new_chain = addproperties(new_chain; rand3=IndexableProperty(rand(3,256))) # last dimension matches chain length
+julia> addproperties!(new_chain; rand3=IndexableProperty(rand(3,256))) # last dimension matches chain length
 256-residue ProteinChain{Float64} (A)
 
 julia> new_chain[1:100].rand3

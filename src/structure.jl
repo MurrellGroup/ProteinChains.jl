@@ -7,7 +7,7 @@
 - `chains::Vector{ProteinChain{T}}`: a collection of `ProteinChain`s.
 - `properties::NamedProperties`: arbitrary properties.
 """
-struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
+mutable struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
     name::String
     atoms::Vector{Atom{T}}
     chains::Vector{ProteinChain{T}}
@@ -30,7 +30,11 @@ chainid_to_index(structure::ProteinStructure, id::AbstractString) = findfirst(c 
 
 Base.getindex(structure::ProteinStructure, i::Integer) = structure.chains[i]
 Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[chainid_to_index(structure, id)]
-Base.getindex(structure::ProteinStructure, is::AbstractVector) = ProteinStructure(structure.name, structure.atoms, map(i -> structure[i], is))
+
+function Base.getindex(structure::ProteinStructure, inds::AbstractVector{<:Integer})
+    properties = map(p -> p[inds], structure.properties)
+    return ProteinStructure(structure.name, structure.atoms, map(i -> structure[i], inds), properties)
+end
 
 Base.setindex!(structure::ProteinStructure, chain::ProteinChain, i::Integer) = (structure.chains[i] = chain)
 Base.setindex!(structure::ProteinStructure, chain::ProteinChain, id::AbstractString) = (structure.chains[chainid_to_index(structure, id)] = chain)
@@ -68,14 +72,16 @@ Base.getproperty(structure::ProteinStructure, name::Symbol) =
 
 Base.propertynames(structure::ProteinStructure, private::Bool=false) = (setdiff(fieldnames(ProteinStructure), private ? () : (:properties,))..., propertynames(structure.properties)...)
 
-setproperties(structure::ProteinStructure, properties::NamedTuple) =
-    ProteinStructure(structure.name, structure.atoms, structure.chains, setproperties(structure.properties, properties))
+function setproperties!(structure::ProteinStructure, properties::NamedTuple)
+    structure.properties = setproperties(structure.properties, properties)
+    structure
+end
 
-addproperties(structure::ProteinStructure, properties::NamedTuple) =
-    setproperties(structure, addproperties(structure.properties, properties))
+addproperties!(structure::ProteinStructure, properties::NamedTuple) =
+    setproperties!(structure, addproperties(structure.properties, properties))
 
-addproperties(structure::ProteinStructure; properties...) =
-    setproperties(structure, addproperties(structure.properties, NamedTuple(properties)))
+addproperties!(structure::ProteinStructure; properties...) =
+    setproperties!(structure, addproperties(structure.properties, NamedTuple(properties)))
 
-removeproperties(structure::ProteinStructure, names::Symbol...) =
-    setproperties(structure, removeproperties(structure.properties, names...))
+removeproperties!(structure::ProteinStructure, names::Symbol...) =
+    setproperties!(structure, removeproperties(structure.properties, names...))
