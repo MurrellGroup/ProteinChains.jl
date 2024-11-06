@@ -29,7 +29,6 @@ export writecif, writepdb
 export pdbentry, @pdb_str, @mmcifdict_str
 export getmmcif, mapmmcif
 export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
-@compat public renumber
 
 include("store/store.jl")
 export ProteinStructureStore

@@ -9,7 +9,7 @@ The [`addproperties!`](@ref) function can be used to add additional properties.
 - `atoms::Vector{Vector{Atom{T}}}`: List of atoms in each residue.
 - `sequence::String`: Amino acid sequence of the protein.
 - `ins_codes::String`: Insertion codes for each residue.
-- `numbering::Vector{Int32}`: Residue numbering (author). See [`renumber`](@ref) for renumbering.
+- `numbering::Vector{Int32}`: Residue numbering (author).
 - `properties::ProteinChains.NamedProperties`: Named properties associated with the chain.
 
 See also [`addproperties!`](@ref), [`StandardProperty`](@ref), [`IndexableProperty`](@ref).
@@ -81,7 +81,7 @@ Creates a new `ProteinChain` instance with the added properties.
 Indexing of property values can be specified with a wrapper type,
 such as `IndexableProperty`.    
 
-See also [`removeproperties`](@ref), [`IndexableProperty`](@ref).
+See also [`removeproperties!`](@ref), [`IndexableProperty`](@ref).
 """
 addproperties!(chain::ProteinChain, properties::NamedTuple) = setproperties!(chain, addproperties(chain.properties, properties))
 addproperties!(chain::ProteinChain; properties...) = setproperties!(chain, addproperties(chain.properties, NamedTuple(properties)))
