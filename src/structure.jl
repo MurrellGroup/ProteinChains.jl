@@ -57,6 +57,13 @@ function Base.show(io::IO, ::MIME"text/plain", structure::ProteinStructure)
     end
 end
 
+function map_chains!(f::Function, structure::ProteinStructure)
+    for (i, chain) in enumerate(structure)
+        structure[i] = f(chain)
+    end
+    return structure
+end
+
 function map_atoms!(f::Function, structure::ProteinStructure, args...)
     for chain in structure
         map_atoms!(f, chain, args...)

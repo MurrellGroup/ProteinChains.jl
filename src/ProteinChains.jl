@@ -21,6 +21,7 @@ export get_atoms, get_backbone
 
 include("structure.jl")
 export ProteinStructure
+export map_chains!
 
 include("io/io.jl")
 export readcif, readpdb
