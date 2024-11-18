@@ -24,6 +24,7 @@ function setproperties! end
 function addproperties! end
 function removeproperties! end
 
+# probably shouldnt deepcopy
 setproperties(x, args...) = setproperties!(deepcopy(x), args...)
 addproperties(x, args...; kwargs...) = addproperties!(deepcopy(x), args...; kwargs...)
 removeproperties(x, args...) = removeproperties!(deepcopy(x), args...)

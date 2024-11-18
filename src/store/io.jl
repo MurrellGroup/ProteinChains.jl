@@ -39,6 +39,15 @@ function deleteproperty(group::HDF5.Group, ::Type, ::Val{:properties}, names::Sy
     return group
 end
 
+function writeproperty(group::HDF5.Group, T::Type, ::Val{name}, dict::AbstractDict{<:AbstractString}) where name
+    haskey(group, string(name)) && HDF5.delete_object(group[string(name)])
+    dict_group = HDF5.create_group(group, string(name))
+    for (key, value) in pairs(dict)
+        writeproperty(dict_group, T, Val(Symbol(key)), value)
+    end
+    return dict_group
+end
+
 ## chain properties
 
 function writeproperty(group::HDF5.Group, ::Type{ProteinChain{T}}, ::Val{:atoms}, atoms::Vector{Vector{Atom{T}}}) where T

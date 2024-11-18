@@ -69,7 +69,7 @@ Base.getproperty(chain::ProteinChain, name::Symbol) =
 Base.propertynames(chain::ProteinChain, private::Bool=false) = (setdiff(fieldnames(ProteinChain), private ? () : (:properties,))..., propertynames(chain.properties)...)
 
 function setproperties!(chain::ProteinChain, ps::NamedTuple)
-    chain.properties = setproperties(chain.properties, ps)
+    chain.properties = setproperties(chain.properties, sortnames(ps))
     chain
 end
 

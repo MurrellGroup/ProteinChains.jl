@@ -91,10 +91,10 @@ using Test
             filename = joinpath(dir, "store.h5")
             structures = [pdb"1EYE", pdb"3HFM"]
             for (i, chain) in enumerate(structures[1])
-                structures[1][i] = addproperties(chain, rand3=rand(3))
+                addproperties!(chain, rand3=rand(3))
             end
             for (i, chain) in enumerate(structures[2])
-                structures[2][i] = addproperties(chain, rand3=rand(3), taxid=-1)
+                addproperties!(chain, rand3=rand(3), taxid=-1, dict=Dict("a"=>1, "b"=>2))
             end
             ProteinChains.serialize(filename, structures)
             structures_copy = ProteinChains.deserialize(filename)
@@ -103,7 +103,8 @@ using Test
             store = ProteinStructureStore(filename)
             @test haskey(store, "1EYE.cif")
             @test issubset((:rand3,), propertynames(store["1EYE.cif"][1]))
-            @test all(chain -> issubset((:rand3, :taxid), propertynames(chain)), store["3HFM.cif"])
+            @test all(chain -> issubset((:rand3, :taxid, :dict), propertynames(chain)), store["3HFM.cif"])
+            @test store["3HFM.cif"][1].dict == Dict("a"=>1, "b"=>2)
             delete!(store, "1EYE.cif")
             @test !haskey(store, "1EYE.cif")
 

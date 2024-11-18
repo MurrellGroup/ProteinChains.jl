@@ -80,7 +80,7 @@ Base.getproperty(structure::ProteinStructure, name::Symbol) =
 Base.propertynames(structure::ProteinStructure, private::Bool=false) = (setdiff(fieldnames(ProteinStructure), private ? () : (:properties,))..., propertynames(structure.properties)...)
 
 function setproperties!(structure::ProteinStructure, properties::NamedTuple)
-    structure.properties = setproperties(structure.properties, properties)
+    structure.properties = setproperties(structure.properties, sortnames(properties))
     structure
 end
 
