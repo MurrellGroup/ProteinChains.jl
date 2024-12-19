@@ -119,11 +119,12 @@ This function creates a new `ProteinStructureStore` and writes each structure in
 Each structure is stored using its name as the key.
 """
 function serialize(filename::AbstractString, structures::AbstractVector{<:ProteinStructure})
-    store = ProteinStructureStore(filename, "cw")
-    for structure in structures
-        store[structure.name] = structure
+    ProteinStructureStore(filename, "cw") do store
+        for structure in structures
+            store[structure.name] = structure
+        end
     end
-    return nothing
+    return filename
 end
 
 """
