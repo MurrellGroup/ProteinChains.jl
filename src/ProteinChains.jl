@@ -36,4 +36,9 @@ export ProteinStructureStore
 @compat public (readattribute, writeattribute)
 @compat public (readproperty, writeproperty, deleteproperty)
 
+include("ideal.jl")
+export BackboneGeometry, DEFAULT_BACKBONE_GEOMETRY
+export IdealResidue, STANDARD_RESIDUE
+export append_residue, prepend_residue
+
 end
