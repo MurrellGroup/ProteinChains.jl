@@ -92,8 +92,8 @@ function Base.write(path::AbstractString, proteinstruc::ProteinStructure, format
     end
 end
 
-function Base.write(path::AbstractString, proteinchains::AbstractVector{<:ProteinChain}, format=get_format(path))
-    proteinstruc = ProteinStructure(basename(path), proteinchains)
+function Base.write(path::AbstractString, proteinchains::AbstractVector{<:ProteinChain{T}}, format=get_format(path)) where T
+    proteinstruc = ProteinStructure(basename(path), Atom{T}[], proteinchains)
     write(path, proteinstruc, format)
 end
 
