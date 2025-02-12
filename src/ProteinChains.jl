@@ -38,13 +38,4 @@ export BackboneGeometry, DEFAULT_BACKBONE_GEOMETRY
 export IdealResidue, STANDARD_RESIDUE
 export append_residue, prepend_residue
 
-using PrecompileTools
-
-@compile_workload begin
-    read("src/precompile/3NIR.pdb", ProteinStructure)
-    structure = read("src/precompile/3NIR.cif", ProteinStructure)
-    io = IOBuffer()
-    show(io, MIME("text/plain"), structure)
-end
-
 end
