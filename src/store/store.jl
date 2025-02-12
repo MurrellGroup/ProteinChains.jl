@@ -51,17 +51,6 @@ Open or create an HDF5 file as a `ProteinStructureStore` where `mode` is one of:
 - "r+" read and write
 - "cw" read and write, create file if not existing, do not truncate
 - "w" read and write, create a new file (destroys any existing contents)
-
-## Structure attributes
-
-The `ProteinStructureStore` type allows for storing metadata about each structure in the file,
-that can be lazily read from the file without loading the structure into memory using [`readattribute`](@ref).
-These attributes are only written to the file when the structure is written,
-and are not preserved in memory after the structure has been read.
-
-- `T`: type of the coordinates in the structure.
-- `n_residues`: vector of number of residues per model in the structure.
-- `n_chains`: vector of number of chains per model in the structure.
 """
 function ProteinStructureStore(filename::AbstractString, mode::AbstractString="cw")
     file = HDF5.h5open(filename, mode)
