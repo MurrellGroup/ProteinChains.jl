@@ -1,111 +1,48 @@
+@dynamic mutable struct ProteinChain{T<:Real}
+    id::String
+    atoms::Vector{Vector{Atom{T}}}
+    sequence::String
+    numbering::Vector{Int}
+    ins_codes::String
+end
+
 """
     ProteinChain{T<:Real}
 
 Represents a protein chain with a basic set of fields from which some other properties might be derived.
-The [`addproperties!`](@ref) function can be used to add additional properties.
 
 ## Fields
 - `id::String`: Identifier for the protein chain.
 - `atoms::Vector{Vector{Atom{T}}}`: List of atoms in each residue.
 - `sequence::String`: Amino acid sequence of the protein.
+- `numbering::Vector{Int}`: Residue numbering (author).
 - `ins_codes::String`: Insertion codes for each residue.
-- `numbering::Vector{Int32}`: Residue numbering (author).
-- `properties::ProteinChains.NamedProperties`: Named properties associated with the chain.
-
-See also [`addproperties!`](@ref), [`StandardProperty`](@ref), [`IndexableProperty`](@ref).
 ```
 """
-mutable struct ProteinChain{T<:Real}
-    id::String
-    atoms::Vector{Vector{Atom{T}}}
-    sequence::String
-    ins_codes::String
-    numbering::Vector{Int32}
-    properties::NamedProperties
+ProteinChain
 
-    function ProteinChain{T}(
-        id::AbstractString,
-        atoms::Vector{Vector{Atom{T}}},
-        sequence::String,
-        ins_codes::String,
-        numbering::Vector{Int32},
-        properties::NamedProperties,
-    ) where T
-        @assert length(atoms) == sizeof(sequence) == sizeof(ins_codes)== length(numbering)
-        chain = new{T}(id, atoms, sequence, ins_codes, numbering, sortnames(properties))
-        for property in properties
-            checkproperty(chain, property)
-        end
-        return chain
-    end
-end
+ProteinChain(id, atoms, sequence; kwargs...) =
+    ProteinChain(id, atoms, sequence, collect(1:length(atoms)); kwargs...)
 
-function ProteinChain{T}(id, atoms, sequence, ins_codes, numbering::Vector{<:Integer}, properties::NamedTuple) where T
-    ProteinChain{T}(id, atoms, sequence, ins_codes, Int32.(numbering), namedproperties(properties))
-end
-
-function ProteinChain(id, atoms::Vector{Vector{Atom{T}}}, sequence, ins_codes=String(fill(0x40, length(sequence))), numbering=collect(1:length(sequence)), properties=(;)) where T
-    ProteinChain{T}(id, atoms, sequence, ins_codes, numbering, properties)
-end
+ProteinChain(id, atoms, sequence, numbering; kwargs...) =
+    ProteinChain(id, atoms, sequence, numbering, ' '^length(sequence); kwargs...)
 
 Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
-    ProteinChain(chain.id, convert(Vector{Vector{Atom{T}}}, chain.atoms), chain.sequence, chain.ins_codes, chain.numbering, chain.properties)
-
-function Base.:(==)(chain1::ProteinChain, chain2::ProteinChain)
-    propertynames(chain1, false) != propertynames(chain2, false) && return false
-    !any(getproperty(chain1, name) != getproperty(chain2, name) for name in propertynames(chain1, false))
-end
+    ProteinChain(chain.id, convert(Vector{Vector{Atom{T}}}, chain.atoms), chain.sequence, chain.numbering, chain.ins_codes; propertypairs(chain, NoFields())...)
 
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
-function Base.getindex(chain::ProteinChain, i::Union{AbstractVector,Colon})
-    properties = map(p -> p[i], chain.properties)
-    ProteinChain(chain.id, chain.atoms[i], chain.sequence[i], chain.ins_codes[i], chain.numbering[i], properties)
+function Base.getindex(chain::ProteinChain, i)
+    args = Iterators.map(fieldnames(ProteinChain)[1:end-1]) do name
+        getproperty(chain, name)
+    end
+    kwargs = Iterators.map(propertypairs(chain, NoFields())) do (name, value)
+        name => value isa AbstractProperty ? value[i] : value
+    end
+    return ProteinChain(args...; kwargs...)
 end
-
-Base.getproperty(chain::ProteinChain, name::Symbol) =
-    name in fieldnames(ProteinChain) ? getfield(chain, name) : unpack(getfield(getfield(chain, :properties), name))
-
-Base.propertynames(chain::ProteinChain, private::Bool=false) = (setdiff(fieldnames(ProteinChain), private ? () : (:properties,))..., propertynames(chain.properties)...)
-
-function setproperties!(chain::ProteinChain, ps::NamedTuple)
-    chain.properties = setproperties(chain.properties, sortnames(ps))
-    chain
-end
-
-"""
-    addproperties!(chain::ProteinChain, properties::NamedTuple)
-    addproperties!(chain::ProteinChain; properties...)
-
-Creates a new `ProteinChain` instance with the added properties.
-Indexing of property values can be specified with a wrapper type,
-such as `IndexableProperty`.    
-
-See also [`removeproperties!`](@ref), [`IndexableProperty`](@ref).
-"""
-addproperties!(chain::ProteinChain, properties::NamedTuple) = setproperties!(chain, addproperties(chain.properties, properties))
-addproperties!(chain::ProteinChain; properties...) = setproperties!(chain, addproperties(chain.properties, NamedTuple(properties)))
-
-"""
-    removeproperties!(chain::ProteinChain, names::Symbol...)
-
-Creates a new `ProteinChain` instance with the property names in `names` removed.
-
-See also [`addproperties!`](@ref)
-"""
-removeproperties!(chain::ProteinChain, names::Symbol...) = setproperties!(chain, removeproperties(chain.properties, names...))
 
 Base.summary(chain::ProteinChain) = "$(length(chain))-residue $(typeof(chain)) ($(chain.id))"
-
-# wrap io with IOContext(io, :compact=>false) to make parseable
-function Base.show(io::IO, chain::ProteinChain)
-    print(io, "ProteinChain(")
-    for fieldname in fieldnames(ProteinChain)
-        show(io, getproperty(chain, fieldname))
-        fieldname == :properties || print(io, ", ")
-    end
-    print(io, ")")
-end
 
 function Base.show(io::IO, ::MIME"text/plain", chain::ProteinChain)
     print(io, summary(chain))

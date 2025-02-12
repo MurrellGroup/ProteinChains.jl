@@ -29,16 +29,20 @@ julia> chain = structure["A"]
 256-residue ProteinChain{Float64} (A)
 
 julia> propertynames(chain)
-(:id, :atoms, :sequence, :ins_codes, :numbering)
+(:id, :atoms, :sequence, :numbering, :ins_codes)
 ```
 
-To store additional properties, `addpropertie!s` can be used to attach persistent chain-level properties or indexable residue-level properties:
+To store additional properties, simply set them like you would set a field of a mutable struct:
 
 ```julia
-julia> addproperties!(chain; taxid=83332)
+julia> chain.taxid = 83332
 256-residue ProteinChain{Float64} (A)
+```
 
-julia> addproperties!(chain; rand3=IndexableProperty(rand(3,256))) # last dimension matches chain length
+For chain-wise properties, the values can be wrapped with `Indexable` to index the last dimension of the array when the chain gets indexed:
+
+```julia>
+julia> chain.rand3 = Indexable(rand(3,256))) # last dimension matches chain length
 256-residue ProteinChain{Float64} (A)
 
 julia> chain[1:100].rand3

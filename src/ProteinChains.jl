@@ -1,6 +1,7 @@
 module ProteinChains
 
 using Backboner
+using DynamicStructs
 
 using Compat: @compat
 
@@ -9,9 +10,7 @@ export Atom
 @compat public (atom_name, atom_number, atom_coords, atom_symbol, atom_mass)
 
 include("properties.jl")
-export AbstractProperty, StandardProperty, IndexableProperty
-export setproperties!, addproperties!, removeproperties!
-export setproperties, addproperties, removeproperties
+export AbstractProperty, unwrap, Indexable
 
 include("chain.jl")
 export ProteinChain
@@ -40,5 +39,14 @@ include("ideal.jl")
 export BackboneGeometry, DEFAULT_BACKBONE_GEOMETRY
 export IdealResidue, STANDARD_RESIDUE
 export append_residue, prepend_residue
+
+using PrecompileTools
+
+@compile_workload begin
+    read("src/precompile/3NIR.pdb", ProteinStructure)
+    structure = read("src/precompile/3NIR.cif", ProteinStructure)
+    io = IOBuffer()
+    show(io, MIME("text/plain"), structure)
+end
 
 end

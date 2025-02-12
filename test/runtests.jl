@@ -35,20 +35,20 @@ using Test
 
     @testset "properties.jl" begin
         value = rand(2, 3)
-        @test IndexableProperty(value)[1:2].value == value[:,1:2]
+        @test Indexable(value)[1:2].value == value[:,1:2]
     end
 
     @testset "chain.jl" begin
-        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", "     ", collect(1:5))
+        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5), "     ")
         @test length(chain) == 5
-        chain = addproperties(chain, taxid=9606)
+        chain.taxid = 9606
         @test hasproperty(chain, :taxid)
-        chain = removeproperties(chain, :taxid)
+        delete!(chain, :taxid)
         @test !hasproperty(chain, :taxid)
     end
 
     @testset "structure.jl" begin
-        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", "     ", collect(1:5))
+        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5), "     ")
         structure = ProteinStructure("1CHN", Atom{Float64}[], [chain, chain])
         @test structure[1] == chain
         @test structure["A"] == chain
@@ -91,10 +91,12 @@ using Test
             filename = joinpath(dir, "store.h5")
             structures = [pdb"1EYE", pdb"3HFM"]
             for (i, chain) in enumerate(structures[1])
-                addproperties!(chain, rand3=rand(3))
+                chain.rand3 = rand(3)
             end
             for (i, chain) in enumerate(structures[2])
-                addproperties!(chain, rand3=rand(3), taxid=-1, dict=Dict("a"=>1, "b"=>2))
+                chain.rand3 = rand(3)
+                chain.taxid = -1
+                chain.dict = Dict("a"=>1, "b"=>2)
             end
             ProteinChains.serialize(filename, structures)
             structures_copy = ProteinChains.deserialize(filename)

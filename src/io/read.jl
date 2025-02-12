@@ -23,48 +23,47 @@ function get_atoms(::Type{Atom{T}}, residues::Vector{BioStructures.AbstractResid
     return atoms
 end
 
-function ProteinChain{T}(chain::BioStructures.Chain) where T
+function ProteinChain(chain::BioStructures.Chain)
     residues = BioStructures.collectresidues(chain, backbone_residue_selector)
     proteinchain = if isempty(residues)
-        ProteinChain(BioStructures.chainid(chain), Vector{Atom{T}}[], "", "", Int[])
+        ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", "", Int[])
     else
         id = BioStructures.chainid(chain)
-        atoms = get_atoms(Atom{T}, residues)
+        atoms = get_atoms(Atom{Float64}, residues)
         sequence = get_sequence(residues)
         ins_codes = String(map(UInt8 ∘ BioStructures.inscode, residues))
         numbering = map(BioStructures.resnumber, residues)
-        ProteinChain(id, atoms, sequence, ins_codes, numbering)
+        ProteinChain(id, atoms, sequence, numbering, ins_codes)
     end
     return proteinchain
 end
 
-function ProteinStructure{T}(model::BioStructures.Model) where T
+function ProteinStructure(model::BioStructures.Model)
     return ProteinStructure(
         model.structure.name,
-        map(atom -> convert(Atom{T}, atom), BioStructures.collectatoms(BioStructures.collectresidues(model, !backbone_residue_selector))),
-        [ProteinChain{T}(chain) for chain in model]
+        map(atom -> convert(Atom{Float64}, atom), BioStructures.collectatoms(BioStructures.collectresidues(model, !backbone_residue_selector))),
+        [ProteinChain(chain) for chain in model]
     )
 end
 
-function ProteinStructure{T}(struc::BioStructures.MolecularStructure) where T
-    proteinstructure = ProteinStructure{T}(first(BioStructures.collectmodels(struc)))
+function ProteinStructure(struc::BioStructures.MolecularStructure)
+    proteinstructure = ProteinStructure(first(BioStructures.collectmodels(struc)))
     return proteinstructure
 end
 
-function ProteinStructure{T}(name::AbstractString, mmcifdict) where T
-    return ProteinStructure{T}(BioStructures.MolecularStructure(mmcifdict; structure_name=name))
+function ProteinStructure(name::AbstractString, mmcifdict)
+    return ProteinStructure(BioStructures.MolecularStructure(mmcifdict; structure_name=name))
 end
 
 function Base.read(
-    path::AbstractString, ::Type{ProteinStructure{T}}, ::Type{MMCIFFormat};
+    path::AbstractString, ::Type{ProteinStructure}, ::Type{MMCIFFormat};
     mmcifdict=BioStructures.MMCIFDict(path),
-) where T
-    return ProteinStructure{T}(basename(path), mmcifdict)
+)
+    return ProteinStructure(basename(path), mmcifdict)
 end
 
-Base.read(path::AbstractString, P::Type{ProteinStructure{T}}, ::Type{PDBFormat}; kwargs...) where T = P(read(path, PDBFormat); kwargs...)
-Base.read(path::AbstractString, P::Type{<:ProteinStructure}; kwargs...) = read(path, P, get_format(path); kwargs...)
-Base.read(path::AbstractString, ::Type{ProteinStructure}, args...; kwargs...) = read(path, ProteinStructure{Float64}, args...; kwargs...)
+Base.read(path::AbstractString, P::Type{ProteinStructure}, ::Type{PDBFormat}; kwargs...) = P(read(path, PDBFormat); kwargs...)
+Base.read(path::AbstractString, P::Type{ProteinStructure}; kwargs...) = read(path, P, get_format(path); kwargs...)
 
 readcif(path::AbstractString) = read(path, ProteinStructure, MMCIFFormat)
 readpdb(path::AbstractString) = read(path, ProteinStructure, PDBFormat)
