@@ -32,8 +32,6 @@ export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
 include("store/store.jl")
 export ProteinStructureStore
 @compat public (serialize, deserialize)
-@compat public (readattribute, writeattribute)
-@compat public (readproperty, writeproperty, deleteproperty)
 
 include("ideal.jl")
 export BackboneGeometry, DEFAULT_BACKBONE_GEOMETRY

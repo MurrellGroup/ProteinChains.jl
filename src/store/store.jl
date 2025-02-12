@@ -135,51 +135,43 @@ Returns a `Vector{ProteinStructure}` of all structures stored in the file.
 """
 deserialize(filename::AbstractString) = ProteinStructureStore(collect ∘ values, filename, "r")
 
-"""
-    readattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString)
-
-Read metadata about a structure without loading the structure into memory.
-"""
-readattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString) =
-    read(HDF5.attributes(store.file[name])[attribute])
-
-"""
-    writeattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value)
-
-Write metadata about a structure.
-"""
-writeattribute(store::ProteinStructureStore, name::AbstractString, attribute::AbstractString, value) =
-    HDF5.attributes(store.file[name])[attribute] = value
-
-"""
-    readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
-
-Read a property from a chain in a structure.
-Chains are indexed from `1` to `length(store, name)`.
-"""
-function readproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
-    T = eval(Symbol(readattribute(store, name, "T")))
-    return readproperty(store.file[name]["chains"][string(index)], ProteinChain{T}, Val(property))
+struct Lazy{T}
+    group::HDF5.Group
 end
 
-"""
-    writeproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol, value)
+Base.length(chain::Lazy{<:ProteinChain}) = read(HDF5.attributes(chain.group)["n_residues"])
+Base.length(structure::Lazy{<:ProteinStructure}) = read(HDF5.attributes(structure.group)["n_chains"])
 
-Write a property to a chain in a structure.
-Chains are indexed from `1` to `length(store, name)`.
-"""
-function writeproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol, value)
-    T = eval(Symbol(readattribute(store, name, "T")))
-    return writeproperty(store.file[name]["chains"][string(index)], ProteinChain{T}, Val(:properties), NamedTuple{(property,)}((value,)))
+function Base.getproperty(lazy::Lazy{T}, property::Symbol) where T
+    property == :group && return getfield(lazy, property)
+    haskey(lazy.group, string(property)) && return readproperty(lazy.group, T, Val(property))
+    # v0.5 compat
+    haskey(lazy.group, "properties") && return getproperty(readproperty(lazy.group, T, Val(:properties)), property)
 end
 
-"""
-    deleteproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol)
+Base.getindex(structure::Lazy{ProteinStructure{T}}, index::Integer) where T = Lazy{ProteinChain{T}}(structure.group["chains"][string(index)])
 
-Delete a property from a chain in a structure.
-Chains are indexed from `1` to `length(store, name)`.
 """
-deleteproperty(store::ProteinStructureStore, name::AbstractString, index::Integer, property::Symbol) =
-    deleteproperty(store.file[name]["chains"][string(index)], Val(:properties), property)
+    Base.view(store::ProteinStructureStore, name::AbstractString)
 
-Base.length(store::ProteinStructureStore, name::AbstractString) = readattribute(store, name, "n_chains")
+Return a lazy view of a structure in the store, allowing for partial loading of structures.
+
+```jldoctest
+julia> store = ProteinStructureStore("store.pss");
+
+julia> store["3NIR"] = pdb"3NIR"
+[ Info: Downloading file from PDB: 3NIR
+1-element ProteinStructure "3NIR.cif":
+ 46-residue ProteinChain{Float64} (A)
+
+julia> view(store, "3NIR").name
+"3NIR.cif"
+
+julia> view(store, "3NIR")[1].sequence
+"TTCCPSIVARSNFNVCRLPGTPEALCATYTGCIIIPGATCPGDYAN"
+```
+"""
+function Base.view(store::ProteinStructureStore, name::AbstractString)
+    T = eval(Symbol(read(HDF5.attributes(store.file[name])["T"])))
+    return Lazy{ProteinStructure{T}}(store.file[name])
+end

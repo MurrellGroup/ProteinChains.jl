@@ -110,6 +110,10 @@ using Test
             delete!(store, "1EYE.cif")
             @test !haskey(store, "1EYE.cif")
 
+            @test view(store, "3HFM.cif")[1].sequence isa String
+            @test length(view(store, "3HFM.cif")) isa Int
+            @test length(view(store, "3HFM.cif")[1]) isa Int
+
             close(store)
         end
     end

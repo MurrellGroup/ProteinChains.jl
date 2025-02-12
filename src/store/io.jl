@@ -1,4 +1,4 @@
-### FOR BACKWARD READING COMPATIBILITY
+# v0.5 compat
 
 const _NEW_CONSTRUCTOR_MAP = Dict("StandardProperty" => :identity, "IndexableProperty" => :Indexable)
 
@@ -79,7 +79,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinChain{T}}) where T
         readproperty(group, ProteinChain{T}, Val(name))
     end
     kwargs = if haskey(group, "properties")
-        # for backward compatibility
+        # v0.5 compat
         readproperty(group, ProteinChain{T}, Val(:properties))
     else
         Iterators.map(setdiff(properties, fields)) do name
@@ -129,7 +129,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinStructure{T}}) where T
         readproperty(group, ProteinStructure{T}, Val(name))
     end
     kwargs = if haskey(group, "properties")
-        # for backward compatibility
+        # v0.5 compat
         @warn "Reading deprecated ProteinStructureStore file format. Please reserialize the data to a new file."
         readproperty(group, ProteinStructure{T}, Val(:properties))
     else
