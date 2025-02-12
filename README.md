@@ -36,23 +36,23 @@ To store additional properties, simply set them like you would set a field of a 
 
 ```julia
 julia> chain.taxid = 83332
-256-residue ProteinChain{Float64} (A)
+83332
 ```
 
 For chain-wise properties, the values can be wrapped with `Indexable` to index the last dimension of the array when the chain gets indexed:
 
-```julia>
-julia> chain.rand3 = Indexable(rand(3,256))) # last dimension matches chain length
-256-residue ProteinChain{Float64} (A)
+```julia
+julia> chain.rand3 = Indexable(rand(3,256)) # last dimension matches chain length
+Indexable wrapping a Matrix{Float64} (get value with `unwrap(x)`)
 
-julia> chain[1:100].rand3
-3×100 Matrix{Float64}:
+julia> chain[1:100].rand3 |> unwrap
+3×100 view(::Matrix{Float64}, :, 1:100) with eltype Float64:
  0.273545  0.639173  0.92708   …  0.459441  0.196407  0.880034       
  0.981498  0.70263   0.279264     0.552049  0.89274   0.0328866      
  0.169268  0.117848  0.732741     0.301921  0.187094  0.281187
 
 julia> propertynames(chain)
-(:id, :atoms, :sequence, :ins_codes, :numbering, :rand3, :taxid)
+(:id, :atoms, :sequence, :numbering, :ins_codes, :taxid, :rand3)
 ```
 
 ## See also

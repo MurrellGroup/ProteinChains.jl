@@ -33,9 +33,7 @@ Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
 function Base.getindex(chain::ProteinChain, i)
-    args = Iterators.map(fieldnames(ProteinChain)[1:end-1]) do name
-        getproperty(chain, name)
-    end
+    args = (chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], chain.ins_codes[i])
     kwargs = Iterators.map(propertypairs(chain, NoFields())) do (name, value)
         name => value isa AbstractProperty ? value[i] : value
     end

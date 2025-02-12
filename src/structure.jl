@@ -24,9 +24,12 @@ chainid_to_index(structure::ProteinStructure, id::AbstractString) = findfirst(c 
 Base.getindex(structure::ProteinStructure, i::Integer) = structure.chains[i]
 Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[chainid_to_index(structure, id)]
 
-function Base.getindex(structure::ProteinStructure, inds::AbstractVector{<:Integer})
-    properties = map(p -> p[inds], structure.properties)
-    return ProteinStructure(structure.name, structure.atoms, map(i -> structure[i], inds), properties)
+function Base.getindex(structure::ProteinStructure, i)
+    args = (structure.name, structure.atoms, structure.chains[i])
+    kwargs = Iterators.map(propertypairs(structure, NoFields())) do (name, value)
+        name => value isa AbstractProperty ? value[i] : value
+    end
+    return ProteinStructure(args...; kwargs...)
 end
 
 Base.setindex!(structure::ProteinStructure, chain::ProteinChain, i::Integer) = (structure.chains[i] = chain)
