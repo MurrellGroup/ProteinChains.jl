@@ -77,6 +77,10 @@ Backboner.Backbone(chain::ProteinChain) = Backbone(get_backbone(chain))
 Backboner.ChainedBonds(chain::ProteinChain) = ChainedBonds(Backbone(chain))
 Backboner.Frames(chain::ProteinChain, ideal_residue=STANDARD_RESIDUE) = Frames(Backbone(chain), ideal_residue)
 
+Backboner.get_bond_angles(chain::ProteinChain) = get_bond_angles(Backbone(chain))
+Backboner.get_bond_lengths(chain::ProteinChain) = get_bond_lengths(Backbone(chain))
+Backboner.get_torsion_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))
+
 psi_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[1:3:end]
 omega_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[2:3:end]
 phi_angles(chain::ProteinChain) = get_torsion_angles(Backbone(chain))[3:3:end]

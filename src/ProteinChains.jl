@@ -1,6 +1,9 @@
 module ProteinChains
 
-using Backboner
+
+using Reexport
+@reexport using Backboner
+
 using DynamicStructs
 
 using Compat: @compat

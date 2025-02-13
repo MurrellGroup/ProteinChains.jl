@@ -12,6 +12,7 @@ HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PeriodicTable = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
@@ -23,6 +24,7 @@ HDF5 = "0.17"
 JSON = "0.21.4"
 LinearAlgebra = "1"
 PeriodicTable = "1"
+Reexport = "1.2.2"
 StaticArrays = "1"
 julia = "1"
 

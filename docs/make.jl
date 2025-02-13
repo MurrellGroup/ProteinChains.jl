@@ -34,7 +34,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "generated/chain.md"
+        "generated/examples.md"
     ],
     doctest=true,
 )
