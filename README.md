@@ -23,7 +23,7 @@ julia> using ProteinChains
 
 julia> structure = pdb"1EYE" # string macro to fetch proteins from the PDB
 [ Info: File exists: 1EYE
-1-chain ProteinStructure{Float64} "1EYE.cif"
+1-element ProteinStructure{Float64} "1EYE.cif"
  256-residue ProteinChain{Float64} (A)
 
 julia> chain = structure["A"]
