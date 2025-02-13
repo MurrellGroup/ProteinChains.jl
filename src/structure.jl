@@ -5,12 +5,12 @@
 end
 
 """
-    ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
+    ProteinStructure{T,P<:ProteinChain{T}} <: AbstractVector{P}
 
 ## Fields
 - `name::String`: Usually just the base name of the original file.
 - `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein residue.
-- `chains::Vector{ProteinChain{T}}`: a collection of `ProteinChain`s.
+- `chains::Vector{P}`: a collection of `ProteinChain`s.
 """
 ProteinStructure
 
