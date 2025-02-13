@@ -32,22 +32,22 @@ Downloads are cached in a temporary directory.
 julia> pdbentry("1EYE")
 [ Info: Downloading file from PDB: 1EYE
 1-chain ProteinStructure{Float64} "1EYE.cif"
- 256-residue ProteinChain{Float64, @NamedTuple{}} (A)
+ 256-residue ProteinChain{Float64} (A)
 
 julia> pdb"1EYE" # string macro for convenience
 [ Info: File exists: 1EYE
 1-chain ProteinStructure{Float64} "1EYE.cif"
- 256-residue ProteinChain{Float64, @NamedTuple{}} (A)
+ 256-residue ProteinChain{Float64} (A)
 
 julia> pdb"1EYE"A # string suffix to get a specific chain
 [ Info: File exists: 1EYE
-256-residue ProteinChain{Float64, @NamedTuple{}} (A)
+256-residue ProteinChain{Float64} (A)
 
 julia> pdb"1EYE"1 # integer suffix to specify "ba_number" keyword
 [ Info: Downloading file from PDB: 1EYE
 2-chain ProteinStructure{Float64} "1EYE_ba1.cif"
- 256-residue ProteinChain{Float64, @NamedTuple{}} (A)
- 256-residue ProteinChain{Float64, @NamedTuple{}} (A-2)
+ 256-residue ProteinChain{Float64} (A)
+ 256-residue ProteinChain{Float64} (A-2)
 ```
 """
 function pdbentry(pdbid::AbstractString; dir=nothing, format=MMCIFFormat, kwargs...)

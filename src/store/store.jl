@@ -21,9 +21,9 @@ ProteinStructureStore with 0 entries
 julia> store["3HFM"] = pdb"3HFM"
 [ Info: Downloading file from PDB: 3HFM
 3-chain ProteinStructure{Float64} "3HFM.cif"
- 215-residue ProteinChain{Float64, @NamedTuple{}} (H)
- 214-residue ProteinChain{Float64, @NamedTuple{}} (L)
- 129-residue ProteinChain{Float64, @NamedTuple{}} (Y)
+ 215-residue ProteinChain{Float64} (H)
+ 214-residue ProteinChain{Float64} (L)
+ 129-residue ProteinChain{Float64} (Y)
 
 julia> store
 ProteinStructureStore with 1 entry
