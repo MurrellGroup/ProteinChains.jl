@@ -126,7 +126,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinStructure{T}}) where T
     end
     kwargs = if haskey(group, "properties")
         # v0.5 compat
-        #@warn "Reading deprecated ProteinStructureStore file format. Please reserialize the data to a new file."
+        #@warn "Reading deprecated ProteinStructureStore file format version. Please reserialize the data to a new file."
         readproperty(Lazy{ProteinStructure{T}}(group), Val(:properties))
     else
         Iterators.map(setdiff(properties, fields)) do name

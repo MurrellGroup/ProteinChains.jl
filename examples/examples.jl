@@ -40,6 +40,8 @@ chain[1:10].numbering
 #-
 chain[10:-1:1].numbering
 
+# ## Dynamic properties
+
 # The chain type is [*dynamic*](https://github.com/AntonOresten/DynamicStructs.jl), so we can add new properties dynamically at runtime:
 
 chain.taxonomy_id = 3721;
@@ -57,6 +59,8 @@ chain.confidence = Indexable(rand(length(chain)));
 chain[1:10].confidence # still wrapped by Indexable
 #-
 unwrap(chain[1:10].confidence)
+
+# ## Backbone geometry
 
 # There are utility functions for getting the backbone geometry:
 
@@ -99,3 +103,5 @@ lazy_structure.chains # loads all chains into memory non-lazily
 lazy_chain = lazy_structure[1]; # load a single chain lazily, string indexing disallowed
 #-
 lazy_chain.sequence
+#-
+read(lazy_structure)

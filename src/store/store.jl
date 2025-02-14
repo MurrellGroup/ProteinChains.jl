@@ -4,6 +4,14 @@ struct Lazy{T}
     group::HDF5.Group
 end
 
+Base.propertynames(lazy::Lazy, private::Bool=false) = ((private ? (:group,) : ())..., Symbol.(keys(lazy.group))...)
+
+Base.getproperty(lazy::Lazy, property::Symbol) =
+    property == :group ? getfield(lazy, property) : readproperty(lazy, Val(property))
+
+Base.setproperty!(lazy::Lazy, property::Symbol, value) =
+    property == :group ? setfield!(lazy, property, value) : writeproperty(lazy, Val(property), value)
+
 include("utils.jl")
 include("io.jl")
 
@@ -166,9 +174,11 @@ Base.getindex(structure::Lazy{ProteinStructure{T}}, index::Integer) where T =
 
 Base.length(chain::Lazy{<:ProteinChain}) = read(HDF5.attributes(chain.group)["n_residues"])
 
-function Base.getproperty(lazy::Lazy{T}, property::Symbol) where T
-    property == :group && return getfield(lazy, property)
-    haskey(lazy.group, string(property)) && return readproperty(lazy, Val(property))
-    # v0.5 compat
-    haskey(lazy.group, "properties") && return getproperty(readproperty(lazy, Val(:properties)), property)
+function Base.getproperty(lazy::Lazy{T}, property::Symbol) where T<:Union{ProteinStructure,ProteinChain}
+    if property == :group || haskey(lazy.group, string(property))
+        return invoke(getproperty, Tuple{Lazy,Symbol}, lazy, property)
+    elseif haskey(lazy.group, "properties")
+        # v0.5 compat
+        return getproperty(readproperty(lazy, Val(:properties)), property)
+    end
 end
