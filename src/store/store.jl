@@ -1,5 +1,9 @@
 import HDF5
 
+struct Lazy{T}
+    group::HDF5.Group
+end
+
 include("utils.jl")
 include("io.jl")
 
@@ -126,22 +130,6 @@ Returns a `Vector{ProteinStructure}` of all structures stored in the file.
 """
 deserialize(filename::AbstractString) = ProteinStructureStore(collect ∘ values, filename, "r")
 
-struct Lazy{T}
-    group::HDF5.Group
-end
-
-Base.length(chain::Lazy{<:ProteinChain}) = read(HDF5.attributes(chain.group)["n_residues"])
-Base.length(structure::Lazy{<:ProteinStructure}) = read(HDF5.attributes(structure.group)["n_chains"])
-
-function Base.getproperty(lazy::Lazy{T}, property::Symbol) where T
-    property == :group && return getfield(lazy, property)
-    haskey(lazy.group, string(property)) && return readproperty(lazy.group, T, Val(property))
-    # v0.5 compat
-    haskey(lazy.group, "properties") && return getproperty(readproperty(lazy.group, T, Val(:properties)), property)
-end
-
-Base.getindex(structure::Lazy{ProteinStructure{T}}, index::Integer) where T = Lazy{ProteinChain{T}}(structure.group["chains"][string(index)])
-
 """
     Base.view(store::ProteinStructureStore, name::AbstractString)
 
@@ -160,9 +148,27 @@ julia> view(store, "3NIR").name
 
 julia> view(store, "3NIR")[1].sequence
 "TTCCPSIVARSNFNVCRLPGTPEALCATYTGCIIIPGATCPGDYAN"
+
+julia> read(view(store, "3NIR2"))
+1-element ProteinStructure "3NIR.cif":
+ 46-residue ProteinChain{Float64} (A)
 ```
 """
 function Base.view(store::ProteinStructureStore, name::AbstractString)
     T = eval(Symbol(read(HDF5.attributes(store.file[name])["T"])))
     return Lazy{ProteinStructure{T}}(store.file[name])
+end
+
+Base.length(structure::Lazy{<:ProteinStructure}) = read(HDF5.attributes(structure.group)["n_chains"])
+
+Base.getindex(structure::Lazy{ProteinStructure{T}}, index::Integer) where T =
+    Lazy{ProteinChain{T}}(structure.group["chains"][string(index)])
+
+Base.length(chain::Lazy{<:ProteinChain}) = read(HDF5.attributes(chain.group)["n_residues"])
+
+function Base.getproperty(lazy::Lazy{T}, property::Symbol) where T
+    property == :group && return getfield(lazy, property)
+    haskey(lazy.group, string(property)) && return readproperty(lazy, Val(property))
+    # v0.5 compat
+    haskey(lazy.group, "properties") && return getproperty(readproperty(lazy, Val(:properties)), property)
 end

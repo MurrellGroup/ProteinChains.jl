@@ -97,6 +97,7 @@ using Test
                 chain.rand3 = rand(3)
                 chain.taxid = -1
                 chain.dict = Dict("a"=>1, "b"=>2)
+                chain.vecs = [[1,2,3], [4,5]]
             end
             ProteinChains.serialize(filename, structures)
             structures_copy = ProteinChains.deserialize(filename)
@@ -105,8 +106,11 @@ using Test
             store = ProteinStructureStore(filename)
             @test haskey(store, "1EYE.cif")
             @test issubset((:rand3,), propertynames(store["1EYE.cif"][1]))
-            @test all(chain -> issubset((:rand3, :taxid, :dict), propertynames(chain)), store["3HFM.cif"])
+            @test all(chain -> issubset((:rand3, :taxid, :dict, :vecs), propertynames(chain)), store["3HFM.cif"])
             @test store["3HFM.cif"][1].dict == Dict("a"=>1, "b"=>2)
+            @test store["3HFM.cif"][1].dict isa Dict{String,Any}
+            @test store["3HFM.cif"][1].vecs == [[1,2,3], [4,5]]
+            @test store["3HFM.cif"][1].vecs isa Vector{Any}
             delete!(store, "1EYE.cif")
             @test !haskey(store, "1EYE.cif")
 
