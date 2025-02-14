@@ -149,7 +149,7 @@ julia> view(store, "3NIR").name
 julia> view(store, "3NIR")[1].sequence
 "TTCCPSIVARSNFNVCRLPGTPEALCATYTGCIIIPGATCPGDYAN"
 
-julia> read(view(store, "3NIR2"))
+julia> read(view(store, "3NIR"))
 1-element ProteinStructure "3NIR.cif":
  46-residue ProteinChain{Float64} (A)
 ```
