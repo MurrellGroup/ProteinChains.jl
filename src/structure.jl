@@ -27,7 +27,12 @@ Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[chain
 function Base.getindex(structure::ProteinStructure, i)
     args = (structure.name, structure.atoms, structure.chains[i])
     kwargs = Iterators.map(propertypairs(structure, NoFields())) do (name, value)
-        name => value isa AbstractProperty ? value[i] : value
+        name => if value isa AbstractProperty
+            checkproperty(structure, value)
+            value isa Indexable ? value[i] : value
+        else
+            value
+        end
     end
     return ProteinStructure(args...; kwargs...)
 end

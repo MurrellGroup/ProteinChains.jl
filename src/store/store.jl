@@ -6,11 +6,13 @@ include("io.jl")
 """
     ProteinStructureStore <: AbstractDict{String,ProteinStructure}
 
-A mutable struct representing a store for protein structures using HDF5 file format.
+An HDF5-based store for protein structures implementing the `AbstractDict` interface,
+allowing for dictionary operations on the stored structures.
 
-The struct implements the AbstractDict interface, allowing for dictionary-like operations.
+A `ProteinStructureStore` gets closed automatically when there no longer exists a program-accessible reference to it.
 
-A `ProteinStructureStore` gets closed when there no longer exists a program-accessible reference to it.
+Some structure and chain properties like dictionaries and vectors of vectors are stored in JSON format,
+and may lose some type information once serialized.
 
 ## Examples
 

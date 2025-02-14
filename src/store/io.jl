@@ -12,15 +12,10 @@ function readproperty(group::HDF5.Group, T::Type, ::Val{:properties})
     )
 end
 
+# generic property read/write
 
 function writeproperty(group::HDF5.Group, ::Type, ::Val{name}, value) where name
-    haskey(group, string(name)) && HDF5.delete_object(group[string(name)])
     return write(group, string(name), value)
-end
-
-function writeproperty(group::HDF5.Group, T::Type, ::Val{name}, property::AbstractProperty) where name
-    HDF5.attributes(group)[string(name)] = string(typeof(property))
-    return writeproperty(group, T, Val(name), unwrap(property))
 end
 
 function readproperty(group::HDF5.Group, ::Type, ::Val{name}) where name
@@ -31,11 +26,16 @@ function readproperty(group::HDF5.Group, ::Type, ::Val{name}) where name
     return f(value)
 end
 
+function writeproperty(group::HDF5.Group, T::Type, ::Val{name}, property::AbstractProperty) where name
+    HDF5.attributes(group)[string(name)] = string(typeof(property))
+    return writeproperty(group, T, Val(name), unwrap(property))
+end
+
 import JSON
 const _json = JSON.parse
-function writeproperty(group::HDF5.Group, ::Type, ::Val{name}, dict::AbstractDict) where name
+function writeproperty(group::HDF5.Group, ::Type, ::Val{name}, x::Union{AbstractDict, AbstractVector{<:AbstractVector}}) where name
     HDF5.attributes(group)[string(name)] = "_json"
-    write(group, string(name), JSON.json(dict))
+    write(group, string(name), JSON.json(x))
 end
 
 ## chain
@@ -114,7 +114,6 @@ end
 
 function Base.write(group::HDF5.Group, structure::ProteinStructure{T}) where T
     HDF5.attributes(group)["T"] = string(T)
-    HDF5.attributes(group)["n_residues"] = sum(length, structure)
     HDF5.attributes(group)["n_chains"] = length(structure)
     for name in propertynames(structure)
         writeproperty(group, ProteinStructure{T}, Val(name), getproperty(structure, name))

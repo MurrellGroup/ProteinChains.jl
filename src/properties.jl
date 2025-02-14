@@ -4,7 +4,7 @@ unwrap(x) = x
 unwrap(p::AbstractProperty) = p.value
 
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractProperty)
-    print(io, typeof(p), " wrapping a ", typeof(p.value), Base.text_colors[:black], " (get value with `unwrap(x)`)", Base.text_colors[:normal])
+    print(io, typeof(p), " wrapping a ", typeof(p.value).name.name, Base.text_colors[:black], " (get value with `unwrap(x)`)", Base.text_colors[:normal])
 end
 
 Base.getindex(p::AbstractProperty, i...) = p
@@ -12,7 +12,7 @@ Base.getindex(p::AbstractProperty, i...) = p
 checkproperty(::Any, ::AbstractProperty) = nothing
 
 struct Indexable <: AbstractProperty
-    value
+    value::AbstractArray
 end
 
 Base.getindex(p::Indexable, i) = Indexable(selectdim(p.value, ndims(p.value), i))

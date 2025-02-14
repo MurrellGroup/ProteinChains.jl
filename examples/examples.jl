@@ -46,7 +46,7 @@ chain.taxonomy_id = 3721;
 #-
 chain.taxonomy_id
 #-
-delete!(chain, :taxonomy_id)
+delete!(chain, :taxonomy_id);
 #-
 hasproperty(chain, :taxonomy_id)
 
@@ -96,6 +96,6 @@ lazy_structure.name
 #-
 lazy_structure.chains # loads all chains into memory non-lazily
 #-
-lazy_chain = lazy_structure[1] # load a single chain lazily, string indexing disallowed
+lazy_chain = lazy_structure[1]; # load a single chain lazily, string indexing disallowed
 #-
 lazy_chain.sequence

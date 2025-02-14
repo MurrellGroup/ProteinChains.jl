@@ -35,7 +35,12 @@ Base.length(chain::ProteinChain) = length(chain.atoms)
 function Base.getindex(chain::ProteinChain, i)
     args = (chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], chain.ins_codes[i])
     kwargs = Iterators.map(propertypairs(chain, NoFields())) do (name, value)
-        name => value isa AbstractProperty ? value[i] : value
+        name => if value isa AbstractProperty
+            checkproperty(chain, value)
+            value isa Indexable ? value[i] : value
+        else
+            value
+        end
     end
     return ProteinChain(args...; kwargs...)
 end
