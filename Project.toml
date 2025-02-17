@@ -1,7 +1,7 @@
 name = "ProteinChains"
 uuid = "b8e8f2a5-48d3-44f1-ba0d-c71cb7726ff8"
 authors = ["Anton Oresten <anton.oresten42@gmail.com> and contributors"]
-version = "0.6.3"
+version = "0.6.4"
 
 [deps]
 Backboner = "9ac9c2a2-1cfe-46d3-b3fd-6fa470ea56a7"

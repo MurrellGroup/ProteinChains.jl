@@ -26,6 +26,10 @@ function readproperty(lazy::Lazy, ::Val{name}) where name
     return f(value)
 end
 
+function deleteproperty(lazy::Lazy, ::Val{name}) where name
+    haskey(lazy.group, string(name)) && HDF5.delete_object(lazy.group, string(name))
+end
+
 function writeproperty(lazy::Lazy, ::Val{name}, property::AbstractProperty) where name
     HDF5.attributes(lazy.group)[string(name)] = string(typeof(property))
     write(lazy.group, string(name), unwrap(property))

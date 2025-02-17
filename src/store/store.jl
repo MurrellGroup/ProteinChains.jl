@@ -12,6 +12,9 @@ Base.getproperty(lazy::Lazy, property::Symbol) =
 Base.setproperty!(lazy::Lazy, property::Symbol, value) =
     property == :group ? setfield!(lazy, property, value) : writeproperty(lazy, Val(property), value)
 
+Base.delete!(lazy::Lazy, property::Symbol) =
+    property == :group ? error("group is immutable") : deleteproperty(lazy, Val(property))
+
 include("utils.jl")
 include("io.jl")
 
@@ -174,11 +177,16 @@ Base.getindex(structure::Lazy{ProteinStructure{T}}, index::Integer) where T =
 
 Base.length(chain::Lazy{<:ProteinChain}) = read(HDF5.attributes(chain.group)["n_residues"])
 
+# v0.5 compat
 function Base.getproperty(lazy::Lazy{T}, property::Symbol) where T<:Union{ProteinStructure,ProteinChain}
-    if property == :group || haskey(lazy.group, string(property))
+    property == :group && return getfield(lazy, :group)
+    if haskey(lazy.group, "properties")
+        if property in fieldnames(T)
+            return invoke(getproperty, Tuple{Lazy,Symbol}, lazy, property)
+        else
+            return getproperty(readproperty(lazy, Val(:properties)), property)
+        end
+    else
         return invoke(getproperty, Tuple{Lazy,Symbol}, lazy, property)
-    elseif haskey(lazy.group, "properties")
-        # v0.5 compat
-        return getproperty(readproperty(lazy, Val(:properties)), property)
     end
 end

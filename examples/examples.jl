@@ -1,6 +1,6 @@
 # # Examples
 
-# ## Basic chain usage
+# ## ProteinStructure and ProteinChain
 
 using ProteinChains
 
@@ -79,9 +79,30 @@ size(frames.rotations)
 #-
 size(frames.translations)
 
+# ## MMCIF utilities
+
+# MMCIF files contain a lot of information that is not present in PDB files.
+# The `mapmmcif` function can be used to map one MMCIF field to another.
+
+mmcifdict = mmcifdict"3HFM";
+#-
+mapmmcif(mmcifdict, "_atom_site.auth_asym_id"   => "_atom_site.label_entity_id")
+#-
+mapmmcif(mmcifdict, "_entity_src_gen.entity_id" => "_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id")
+#-
+chainid_to_taxonomyid = mapmmcif(mmcifdict,
+    "_atom_site.auth_asym_id"   => "_atom_site.label_entity_id",
+    "_entity_src_gen.entity_id" => "_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id")
+#-
+structure = pdb"3HFM"
+for chain in structure
+    chain.taxonomy_id = chainid_to_taxonomyid[chain.id]
+    println("Set taxonomy_id of chain $(chain.id) to $(chain.taxonomy_id)")
+end
+
 # ## ProteinStructureStore
 
-# The `ProteinStructureStore <: AbstractDict{String, ProteinStructure}` type is a lazy wrapper for a disk-based storage of `ProteinStructure`s.
+# The `ProteinStructureStore <: AbstractDict{String, ProteinStructure}` type is a lazy wrapper for a file-based storage of `ProteinStructure`s.
 
 dir = mktempdir();
 store = ProteinStructureStore(joinpath(dir, "structures.pss"));
