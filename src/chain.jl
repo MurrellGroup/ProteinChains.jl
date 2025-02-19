@@ -76,7 +76,7 @@ function get_backbone(atoms::Vector{Vector{Atom{T}}}) where T
     return backbone_coords
 end
 
-get_backbone(chain::ProteinChain) = hasproperty(chain, :backbone) ? chain.backbone : get_backbone(chain.atoms)
+get_backbone(chain::ProteinChain) = get_backbone(chain.atoms)
 
 Backboner.Backbone(chain::ProteinChain) = Backbone(get_backbone(chain))
 Backboner.ChainedBonds(chain::ProteinChain) = ChainedBonds(Backbone(chain))
