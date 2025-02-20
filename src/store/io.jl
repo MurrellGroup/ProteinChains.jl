@@ -30,16 +30,21 @@ function deleteproperty(lazy::Lazy, ::Val{name}) where name
     haskey(lazy.group, string(name)) && HDF5.delete_object(lazy.group, string(name))
 end
 
+function writeproperty(lazy::Lazy, ::Val{name}, value::AbstractString) where name
+    HDF5.attributes(lazy.group)[string(name)] = "String"
+    writeproperty(lazy, Val(name), collect(codeunits(value)))
+end
+
 function writeproperty(lazy::Lazy, ::Val{name}, property::AbstractProperty) where name
     HDF5.attributes(lazy.group)[string(name)] = string(typeof(property))
     write(lazy.group, string(name), unwrap(property))
 end
 
 import JSON
-const _json = JSON.parse
+const _json = JSON.parse ∘ String
 function writeproperty(lazy::Lazy, ::Val{name}, x::Union{AbstractDict, AbstractVector{<:Union{AbstractDict, AbstractVector}}}) where name
     HDF5.attributes(lazy.group)[string(name)] = "_json"
-    write(lazy.group, string(name), JSON.json(x))
+    write(lazy.group, string(name), collect(codeunits(JSON.json(x))))
 end
 
 ## chain
