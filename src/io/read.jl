@@ -25,17 +25,13 @@ end
 
 function ProteinChain(chain::BioStructures.Chain)
     residues = BioStructures.collectresidues(chain, backbone_residue_selector)
-    proteinchain = if isempty(residues)
-        ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", Int[], "")
-    else
-        id = BioStructures.chainid(chain)
-        atoms = get_atoms(Atom{Float64}, residues)
-        sequence = get_sequence(residues)
-        ins_codes = String(map(UInt8 ∘ BioStructures.inscode, residues))
-        numbering = map(BioStructures.resnumber, residues)
-        ProteinChain(id, atoms, sequence, numbering, ins_codes)
-    end
-    return proteinchain
+    return ProteinChain(
+        BioStructures.chainid(chain),
+        get_atoms(Atom{Float64}, residues),
+        get_sequence(residues),
+        map(BioStructures.resnumber, residues),
+        join(map(BioStructures.inscode, residues))
+    )
 end
 
 function ProteinStructure(model::BioStructures.Model)
