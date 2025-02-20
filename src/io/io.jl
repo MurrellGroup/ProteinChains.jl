@@ -1,4 +1,4 @@
-using BioStructures: BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
+using BioStructures: BioStructures, MMCIFDict, PDBFormat, MMCIFFormat, downloadpdb
 
 const ProteinFileFormat = Union{PDBFormat, MMCIFFormat}
 const AMINOACIDS = Set("ACDEFGHIKLMNPQRSTVWY")

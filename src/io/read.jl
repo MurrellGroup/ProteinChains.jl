@@ -26,7 +26,7 @@ end
 function ProteinChain(chain::BioStructures.Chain)
     residues = BioStructures.collectresidues(chain, backbone_residue_selector)
     proteinchain = if isempty(residues)
-        ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", "", Int[])
+        ProteinChain(BioStructures.chainid(chain), Vector{Atom{Float64}}[], "", Int[], "")
     else
         id = BioStructures.chainid(chain)
         atoms = get_atoms(Atom{Float64}, residues)

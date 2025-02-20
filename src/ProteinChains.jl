@@ -1,6 +1,5 @@
 module ProteinChains
 
-
 using Reexport
 @reexport using Backboner
 

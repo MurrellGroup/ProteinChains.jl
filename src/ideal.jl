@@ -106,5 +106,3 @@ function prepend_residue(backbone::Backbone, torsion_angles::Vector{<:Real}; ide
     bond_angles = [ideal.N_Ca_C_angle, ideal.Ca_C_N_angle, ideal.C_N_Ca_angle]
     return prepend_bonds(backbone, Float64.(bond_lengths), Float64.(bond_angles), Float64.(torsion_angles))
 end
-
-function idealize! end
