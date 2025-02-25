@@ -5,7 +5,7 @@
 [![Build Status](https://github.com/MurrellGroup/ProteinChains.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MurrellGroup/ProteinChains.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/MurrellGroup/ProteinChains.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/MurrellGroup/ProteinChains.jl)
 
-This Julia package provides implements the `ProteinChain` type: a chain-level structure-of-arrays type representation of proteins, with support for indexing by residue index.
+This Julia package implements the `ProteinChain` type: a chain-level structure-of-arrays type representation of proteins, with support for dynamic properties and indexing by residue indices.
 
 ## Installation
 
