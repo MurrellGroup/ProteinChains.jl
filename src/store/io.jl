@@ -27,7 +27,11 @@ function readproperty(lazy::Lazy, ::Val{name}) where name
 end
 
 function deleteproperty(lazy::Lazy, ::Val{name}) where name
-    haskey(lazy.group, string(name)) && HDF5.delete_object(lazy.group, string(name))
+    if haskey(lazy.group, string(name))
+        HDF5.delete_object(lazy.group, string(name))
+        dict = HDF5.AttributeDict(lazy.group)
+        haskey(dict, string(name)) && delete!(dict, string(name))
+    end
 end
 
 function writeproperty(lazy::Lazy, ::Val{name}, value::AbstractString) where name

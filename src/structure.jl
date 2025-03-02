@@ -19,7 +19,11 @@ Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
 
 Base.size(structure::ProteinStructure) = (length(structure.chains),)
 
-chainid_to_index(structure::ProteinStructure, id::AbstractString) = findfirst(c -> c.id == id, structure.chains)
+function chainid_to_index(structure::ProteinStructure, id::AbstractString)
+    index = findfirst(c -> c.id == id, structure.chains)
+    index === nothing && throw(KeyError(id))
+    return index
+end
 
 Base.getindex(structure::ProteinStructure, i::Integer) = structure.chains[i]
 Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[chainid_to_index(structure, id)]
