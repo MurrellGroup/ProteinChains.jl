@@ -26,26 +26,30 @@ function residue_mapping(master::ProteinChain, target::ProteinChain)
     return [master_map[i] for i in common_resnums], [target_map[i] for i in common_resnums]
 end
 
-function sequence_mismatch(master::ProteinChain, target::ProteinChain, master_inds, target_inds)
-    matches = count(splat((m,t) -> master.sequence[m] == target.sequence[t]), zip(master_inds, target_inds); init=0)
-    return 1 - matches / length(target_inds)
-end
+mismatches(master::ProteinChain, target::ProteinChain, master_inds, target_inds) =
+    count(splat((m,t) -> master.sequence[m] != target.sequence[t]), zip(master_inds, target_inds); init=0)
 
-function detect_repeats(structure::ProteinStructure; mismatch_tolerance=0.05, length_threshold=0.8)
-    N = length(structure.chains)
-    L = sum(length, structure.chains)
+function detect_repeats(structure::ProteinStructure;
+    mismatch_tolerance=1,
+    length_threshold=0.8, # backwards compatibility
+    overlap_proportion=length_threshold,
+)
+    N = length(structure)
+    L = sum(length, structure)
     graph = SimpleGraph(L)
     assigned_chains = Set{Int}()
-    offsets = [0; accumulate(+, length.(structure.chains))]
+    offsets = [0; accumulate(+, length.(structure))]
     for i in 1:N
         i in assigned_chains && continue
-        master_chain = structure.chains[i]
+        master_chain = structure[i]
         for j in i+1:N
             j in assigned_chains && continue
-            target_chain = structure.chains[j]
-            /(minmax(length(master_chain), length(target_chain))...) < length_threshold && continue
+            target_chain = structure[j]
+            splat(/)(minmax(length(master_chain), length(target_chain))) < overlap_proportion && continue
             master_inds, target_inds = residue_mapping(master_chain, target_chain)
-            if sequence_mismatch(master_chain, target_chain, master_inds, target_inds) ≤ mismatch_tolerance
+            length(target_inds) / length(target_chain) < overlap_proportion && continue
+            length(master_inds) / length(master_chain) < overlap_proportion && continue
+            if mismatches(master_chain, target_chain, master_inds, target_inds) ≤ mismatch_tolerance
                 for (t, m) in zip(target_inds, master_inds)
                     add_edge!(graph, offsets[i] + t, offsets[j] + m)
                 end
