@@ -1,13 +1,14 @@
 name = "ProteinChains"
 uuid = "b8e8f2a5-48d3-44f1-ba0d-c71cb7726ff8"
 authors = ["Anton Oresten <anton.oresten42@gmail.com> and contributors"]
-version = "0.6.6"
+version = "0.6.7"
 
 [deps]
 Backboner = "9ac9c2a2-1cfe-46d3-b3fd-6fa470ea56a7"
 BioStructures = "de9282ab-8554-53be-b2d6-f6c222edabfc"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DynamicStructs = "e139c391-eeee-4818-b359-c8725224fb1f"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -20,6 +21,7 @@ Backboner = "0.12"
 BioStructures = "4"
 Compat = "4.10"
 DynamicStructs = "0.2"
+Graphs = "1.12.0"
 HDF5 = "0.17"
 JSON = "0.21.4"
 LinearAlgebra = "1"

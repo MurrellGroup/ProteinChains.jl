@@ -40,4 +40,7 @@ export BackboneGeometry, DEFAULT_BACKBONE_GEOMETRY
 export IdealResidue, STANDARD_RESIDUE
 export append_residue, prepend_residue
 
+include("repeats.jl")
+export detect_repeats
+
 end
