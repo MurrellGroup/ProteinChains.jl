@@ -23,8 +23,8 @@ ProteinStructure(name, chains::Vector{ProteinChain{T}}, args...; kwargs...) wher
 Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
     ProteinStructure(
         structure.name,
-        convert(Vector{ProteinChain{T}}, structure.chains),
-        convert(Vector{Atom{T}}, structure.atoms);
+        convert(Vector{Atom{T}}, structure.atoms),
+        convert(Vector{ProteinChain{T}}, structure.chains);
         propertypairs(structure, NoFields())...,
     )
 
