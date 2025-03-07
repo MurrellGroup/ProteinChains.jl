@@ -1,9 +1,10 @@
 name = "ProteinChains"
 uuid = "b8e8f2a5-48d3-44f1-ba0d-c71cb7726ff8"
 authors = ["Anton Oresten <anton.oresten42@gmail.com> and contributors"]
-version = "0.6.8"
+version = "0.6.9"
 
 [deps]
+AssigningSecondaryStructure = "8ed43e74-60fb-4e11-99b9-91deed37aef7"
 Backboner = "9ac9c2a2-1cfe-46d3-b3fd-6fa470ea56a7"
 BioStructures = "de9282ab-8554-53be-b2d6-f6c222edabfc"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
@@ -15,19 +16,22 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PeriodicTable = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+AssigningSecondaryStructure = "0.5"
 Backboner = "0.12"
 BioStructures = "4"
-Compat = "4.10"
+Compat = "4"
 DynamicStructs = "0.2"
-Graphs = "1.12.0"
+Graphs = "1"
 HDF5 = "0.17"
-JSON = "0.21.4"
+JSON = "0.21"
 LinearAlgebra = "1"
 PeriodicTable = "1"
-Reexport = "1.2.2"
+Reexport = "1"
 StaticArrays = "1"
+Statistics = "1"
 julia = "1"
 
 [extras]

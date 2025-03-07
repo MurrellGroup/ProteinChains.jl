@@ -1,23 +1,34 @@
-@dynamic mutable struct ProteinStructure{T,P<:ProteinChain{T}} <: AbstractVector{P}
+@dynamic mutable struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
     name::String
     atoms::Vector{Atom{T}}
-    chains::Vector{P}
+    chains::Vector{ProteinChain{T}}
 end
 
 """
-    ProteinStructure{T,P<:ProteinChain{T}} <: AbstractVector{P}
+    ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
 
 ## Fields
 - `name::String`: Usually just the base name of the original file.
 - `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein residue.
-- `chains::Vector{P}`: a collection of `ProteinChain`s.
+- `chains::Vector{ProteinChain{T}}`: a collection of `ProteinChain`s.
 """
 ProteinStructure
 
-Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
-    ProteinStructure(structure.name, convert(Vector{Atom{T}}, structure.atoms), convert(Vector{ProteinChain{T}}, structure.chains))
+"""
+    ProteinStructure(name, chains; properties...)
+"""
+ProteinStructure(name, chains::Vector{ProteinChain{T}}, args...; kwargs...) where T =
+    ProteinStructure(name, Atom{T}[], chains, args...; kwargs...)
 
-Base.size(structure::ProteinStructure) = (length(structure.chains),)
+Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
+    ProteinStructure(
+        structure.name,
+        convert(Vector{ProteinChain{T}}, structure.chains),
+        convert(Vector{Atom{T}}, structure.atoms);
+        propertypairs(structure, NoFields())...,
+    )
+
+Base.size(structure::ProteinStructure) = size(structure.chains)
 
 function chainid_to_index(structure::ProteinStructure, id::AbstractString)
     index = findfirst(c -> c.id == id, structure.chains)
@@ -46,17 +57,15 @@ Base.setindex!(structure::ProteinStructure, chain::ProteinChain, id::AbstractStr
 
 Base.showarg(io::IO, structure::ProteinStructure, ::Bool) = print(io, "$(ProteinStructure) \"$(structure.name)\"")
 
-function map_chains!(f::Function, structure::ProteinStructure)
+function map_chains!(f::Function, structure::ProteinStructure, args...)
     for (i, chain) in enumerate(structure)
-        structure[i] = f(chain)
+        structure[i] = f(chain, args...)
     end
     return structure
 end
 
 function map_atoms!(f::Function, structure::ProteinStructure, args...)
-    for chain in structure
-        map_atoms!(f, chain, args...)
-    end
+    map_chains!(c -> map_atoms!(f, c, args...), structure)
     for i in eachindex(structure.atoms)
         structure.atoms[i] = f(structure.atoms[i], args...)
     end
