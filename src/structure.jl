@@ -17,7 +17,7 @@ ProteinStructure
 """
     ProteinStructure(name, chains; properties...)
 """
-ProteinStructure(name, chains::Vector{ProteinChain{T}}, args...; kwargs...) where T =
+ProteinStructure(name::AbstractString, chains::Vector{ProteinChain{T}}, args...; kwargs...) where T =
     ProteinStructure(name, Atom{T}[], chains, args...; kwargs...)
 
 Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
