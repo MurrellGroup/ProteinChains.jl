@@ -29,10 +29,20 @@ end
 mismatches(master::ProteinChain, target::ProteinChain, master_inds, target_inds) =
     count(splat((m,t) -> master.sequence[m] != target.sequence[t]), zip(master_inds, target_inds); init=0)
 
+function complete_components!(g::SimpleGraph)
+    for comp in connected_components(g)
+        for i in comp, j in comp
+            add_edge!(g, i, j)
+        end
+    end
+    return g
+end
+
 function detect_repeats(structure::ProteinStructure;
     mismatch_tolerance=1,
     length_threshold=0.8, # backwards compatibility
     overlap_proportion=length_threshold,
+    connect_fully=false,
 )
     N = length(structure)
     L = sum(length, structure)
@@ -57,5 +67,6 @@ function detect_repeats(structure::ProteinStructure;
             end
         end
     end
+    connect_fully && complete_components!(graph)
     return graph
 end
