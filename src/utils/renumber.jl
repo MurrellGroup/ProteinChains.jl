@@ -38,6 +38,6 @@ function renumber(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
 end
 
 function renumber!(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
-    chain.numbering = renumber(chain, mmcif_dict)
+    chain.numbering = Int.(renumber(chain, mmcif_dict))
     return chain
 end

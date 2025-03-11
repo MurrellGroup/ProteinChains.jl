@@ -51,7 +51,7 @@ function detect_repeats(structure::ProteinStructure;
             length(master_inds) / length(master_chain) < overlap_proportion && continue
             if mismatches(master_chain, target_chain, master_inds, target_inds) ≤ mismatch_tolerance
                 for (t, m) in zip(target_inds, master_inds)
-                    add_edge!(graph, offsets[i] + t, offsets[j] + m)
+                    add_edge!(graph, offsets[i] + m, offsets[j] + t)
                 end
                 push!(assigned_chains, j)
             end
