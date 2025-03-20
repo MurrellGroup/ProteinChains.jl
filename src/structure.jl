@@ -1,9 +1,3 @@
-@dynamic mutable struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
-    name::String
-    atoms::Vector{Atom{T}}
-    chains::Vector{ProteinChain{T}}
-end
-
 """
     ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
 
@@ -12,21 +6,25 @@ end
 - `atoms::Vector{Atom{T}}`: free atoms from the structure that were not part of any protein residue.
 - `chains::Vector{ProteinChain{T}}`: a collection of `ProteinChain`s.
 """
-ProteinStructure
+@dynamic mutable struct ProteinStructure{T} <: AbstractVector{ProteinChain{T}}
+    name::String
+    atoms::Vector{Atom{T}}
+    chains::Vector{ProteinChain{T}}
+end
 
 """
     ProteinStructure(name, chains; properties...)
 """
-ProteinStructure(name::AbstractString, chains::Vector{ProteinChain{T}}, args...; kwargs...) where T =
-    ProteinStructure(name, Atom{T}[], chains, args...; kwargs...)
+ProteinStructure(name::AbstractString, chains::Vector{ProteinChain{T}}; kwargs...) where T =
+    ProteinStructure(name, Atom{T}[], chains; kwargs...)
 
-Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T =
+function Base.convert(::Type{ProteinStructure{T}}, structure::ProteinStructure) where T
     ProteinStructure(
         structure.name,
         convert(Vector{Atom{T}}, structure.atoms),
         convert(Vector{ProteinChain{T}}, structure.chains);
-        propertypairs(structure, NoFields())...,
-    )
+        propertypairs(structure, NoFields)...)
+end
 
 Base.size(structure::ProteinStructure) = size(structure.chains)
 
@@ -41,7 +39,7 @@ Base.getindex(structure::ProteinStructure, id::AbstractString) = structure[chain
 
 function Base.getindex(structure::ProteinStructure, i)
     args = (structure.name, structure.atoms, structure.chains[i])
-    kwargs = Iterators.map(propertypairs(structure, NoFields())) do (name, value)
+    kwargs = Iterators.map(propertypairs(structure, NoFields)) do (name, value)
         name => if value isa AbstractProperty
             checkproperty(structure, value)
             value isa Indexable ? value[i] : value

@@ -1,11 +1,3 @@
-@dynamic mutable struct ProteinChain{T<:Real}
-    id::String
-    atoms::Vector{Vector{Atom{T}}}
-    sequence::String
-    numbering::Vector{Int}
-    ins_codes::String
-end
-
 """
     ProteinChain{T<:Real}
 
@@ -19,22 +11,38 @@ Represents a protein chain with a basic set of fields from which some other prop
 - `ins_codes::String`: Insertion codes for each residue.
 ```
 """
-ProteinChain
+@dynamic mutable struct ProteinChain{T<:Real}
+    id::String
+    atoms::Vector{Vector{Atom{T}}}
+    sequence::String
+    numbering::Vector{Int}
+    ins_codes::String
+end
 
-ProteinChain(id, atoms, sequence; kwargs...) =
-    ProteinChain(id, atoms, sequence, collect(1:length(atoms)); kwargs...)
+function ProteinChain(
+    id, atoms, sequence,
+    numbering=collect(1:length(atoms)),
+    ins_codes=' '^length(sequence);
+    kwargs...
+)
+    ProteinChain(id, atoms, sequence, numbering, ins_codes; kwargs...)
+end
 
-ProteinChain(id, atoms, sequence, numbering; kwargs...) =
-    ProteinChain(id, atoms, sequence, numbering, ' '^length(sequence); kwargs...)
-
-Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T =
-    ProteinChain(chain.id, convert(Vector{Vector{Atom{T}}}, chain.atoms), chain.sequence, chain.numbering, chain.ins_codes; propertypairs(chain, NoFields())...)
+function Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T
+    ProteinChain(
+        chain.id,
+        convert(Vector{Vector{Atom{T}}}, chain.atoms),
+        chain.sequence,
+        chain.numbering,
+        chain.ins_codes;
+        propertypairs(chain, NoFields)...)
+end
 
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
 function Base.getindex(chain::ProteinChain, i)
     args = (chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], chain.ins_codes[i])
-    kwargs = Iterators.map(propertypairs(chain, NoFields())) do (name, value)
+    kwargs = Iterators.map(propertypairs(chain, NoFields)) do (name, value)
         name => if value isa AbstractProperty
             checkproperty(chain, value)
             value isa Indexable ? value[i] : value

@@ -11,7 +11,7 @@
 
 Define the idealized bond lengths and bond angles of a protein backbone.
 """
-Base.@kwdef struct BackboneGeometry
+@kwdef struct BackboneGeometry
     N_Ca_length = 1.46
     Ca_C_length = 1.52
     C_N_length = 1.33

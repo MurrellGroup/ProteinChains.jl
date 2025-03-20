@@ -1,7 +1,7 @@
 name = "ProteinChains"
 uuid = "b8e8f2a5-48d3-44f1-ba0d-c71cb7726ff8"
 authors = ["Anton Oresten <anton.oresten42@gmail.com> and contributors"]
-version = "0.6.11"
+version = "0.6.12"
 
 [deps]
 AssigningSecondaryStructure = "8ed43e74-60fb-4e11-99b9-91deed37aef7"
@@ -23,7 +23,7 @@ AssigningSecondaryStructure = "0.5"
 Backboner = "0.12"
 BioStructures = "4"
 Compat = "4"
-DynamicStructs = "0.2"
+DynamicStructs = "0.2.3"
 Graphs = "1"
 HDF5 = "0.17"
 JSON = "0.21"

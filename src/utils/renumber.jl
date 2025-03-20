@@ -1,9 +1,9 @@
-_nothing_fallback(x, y) = x
-_nothing_fallback(::Nothing, y) = y
-tryparse_int32(s::String) = _nothing_fallback(tryparse(Int32, s), Int32(-1))
+tryparse_fallback(type, str, fallback=type(-1)) = let x = tryparse(type, str)
+    isnothing(x) ? fallback : x
+end
 
 function renumber(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
-    id = split(chain.id, '-')[1]
+    id, _ = split(chain.id, '-')
 
     label_seq_ids = mmcif_dict["_atom_site.label_seq_id"]
     pdbx_PDB_ins_codes = mmcif_dict["_atom_site.pdbx_PDB_ins_code"]
@@ -24,14 +24,14 @@ function renumber(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
             current_residue = residue
         end
 
-        renum = tryparse_int32(auth_seq_ids[i])
+        renum = tryparse_fallback(Int32, auth_seq_ids[i])
 
         key = (renum, first(ins_code))
         label_seq_id_dict[key] = label_seq_ids[i]
     end
 
     renumbering = map(
-        (num, ins_code) -> tryparse_int32(get(label_seq_id_dict, (num, ins_code), "-1")),
+        (num, ins_code) -> tryparse_fallback(Int32, get(label_seq_id_dict, (num, ins_code), "-1")),
         chain.numbering, chain.ins_codes)
 
     return renumbering
