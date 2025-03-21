@@ -112,17 +112,3 @@ store["3NIR"] = pdb"3NIR";
 store["3NIR"]
 #-
 store["3NIR"]["A"]
-
-# We can use `Base.view` to get a lazy view of a structure:
-
-lazy_structure = view(store, "3NIR");
-#-
-lazy_structure.name
-#-
-lazy_structure.chains # loads all chains into memory non-lazily
-#-
-lazy_chain = lazy_structure[1]; # load a single chain lazily, string indexing disallowed
-#-
-lazy_chain.sequence
-#-
-read(lazy_structure)

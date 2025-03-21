@@ -18,41 +18,6 @@ Base.delete!(lazy::Lazy, property::Symbol) =
 include("utils.jl")
 include("io.jl")
 
-"""
-    ProteinStructureStore <: AbstractDict{String,ProteinStructure}
-
-An HDF5-based store for protein structures implementing the `AbstractDict` interface,
-allowing for dictionary operations on the stored structures.
-
-A `ProteinStructureStore` gets closed automatically when there no longer exists a program-accessible reference to it.
-
-Some structure and chain properties like dictionaries and vectors of vectors are stored in JSON format,
-and may lose some type information once serialized.
-
-## Examples
-
-```jldoctest
-julia> store = ProteinStructureStore("store.h5")
-ProteinStructureStore with 0 entries
-
-julia> store["3HFM"] = pdb"3HFM"
-[ Info: Downloading file from PDB: 3HFM
-3-element ProteinStructure "3HFM.cif":
- 215-residue ProteinChain{Float64} (H)
- 214-residue ProteinChain{Float64} (L)
- 129-residue ProteinChain{Float64} (Y)
-
-julia> store
-ProteinStructureStore with 1 entry
-
-julia> keys(store)
-Set{String} with 1 element:
-  "3HFM"
-
-julia> delete!(store, "3HFM")
-ProteinStructureStore with 0 entries
-```
-"""
 mutable struct ProteinStructureStore <: AbstractDict{String,ProteinStructure}
     filename::String
     file::HDF5.File
@@ -60,15 +25,6 @@ mutable struct ProteinStructureStore <: AbstractDict{String,ProteinStructure}
     mode::String
 end
 
-"""
-    ProteinStructureStore(filename, mode="cw")
-
-Open or create an HDF5 file as a `ProteinStructureStore` where `mode` is one of:
-- "r" read only
-- "r+" read and write
-- "cw" read and write, create file if not existing, do not truncate
-- "w" read and write, create a new file (destroys any existing contents)
-"""
 function ProteinStructureStore(filename::AbstractString, mode::AbstractString="cw")
     file = HDF5.h5open(filename, mode)
     store = ProteinStructureStore(filename, file, Set(keys(file)), mode)
@@ -112,18 +68,8 @@ Base.show(io::IO, ::MIME"text/plain", store::ProteinStructureStore) = print(io, 
 
 Base.open(::Type{ProteinStructureStore}, filename::AbstractString, args...) = ProteinStructureStore(filename, args...)
 
-"""
-    ProteinStructureStore(f::Function, filename, mode="cw")
-"""
 ProteinStructureStore(f::Function, args...) = open(f, ProteinStructureStore, args...)
 
-"""
-    serialize(filename::AbstractString, structures::AbstractVector{<:ProteinStructure})
-
-Serialize a vector of `ProteinStructure` objects to an HDF5 file.
-This function creates a new `ProteinStructureStore` and writes each structure in the input vector to it.
-Each structure is stored using its name as the key.
-"""
 function serialize(filename::AbstractString, structures::AbstractVector{<:ProteinStructure})
     ProteinStructureStore(filename, "cw") do store
         for structure in structures
@@ -133,38 +79,8 @@ function serialize(filename::AbstractString, structures::AbstractVector{<:Protei
     return filename
 end
 
-"""
-    deserialize(filename::AbstractString)
-
-Deserialize `ProteinStructure` objects from an HDF5 file.
-Returns a `Vector{ProteinStructure}` of all structures stored in the file.
-"""
 deserialize(filename::AbstractString) = ProteinStructureStore(collect ∘ values, filename, "r")
 
-"""
-    Base.view(store::ProteinStructureStore, name::AbstractString)
-
-Return a lazy view of a structure in the store, allowing for partial loading of structures.
-
-```jldoctest
-julia> store = ProteinStructureStore("store.pss");
-
-julia> store["3NIR"] = pdb"3NIR"
-[ Info: Downloading file from PDB: 3NIR
-1-element ProteinStructure "3NIR.cif":
- 46-residue ProteinChain{Float64} (A)
-
-julia> view(store, "3NIR").name
-"3NIR.cif"
-
-julia> view(store, "3NIR")[1].sequence
-"TTCCPSIVARSNFNVCRLPGTPEALCATYTGCIIIPGATCPGDYAN"
-
-julia> read(view(store, "3NIR"))
-1-element ProteinStructure "3NIR.cif":
- 46-residue ProteinChain{Float64} (A)
-```
-"""
 function Base.view(store::ProteinStructureStore, name::AbstractString)
     T = eval(Symbol(read(HDF5.attributes(store.file[name])["T"])))
     return Lazy{ProteinStructure{T}}(store.file[name])
