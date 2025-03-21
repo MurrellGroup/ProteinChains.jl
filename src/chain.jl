@@ -25,7 +25,7 @@ Base.length(chain::ProteinChain) = length(chain.atoms)
 
 function Base.getindex(chain::ProteinChain, i)
     args = chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i]
-    kwargs = Iterators.map(propertypairs(chain, NoFields)) do (name, value)
+    kws = Iterators.map(propertypairs(chain, NoFields)) do (name, value)
         name => if value isa AbstractProperty
             checkproperty(chain, value)
             value isa Indexable ? value[i] : value
@@ -33,7 +33,7 @@ function Base.getindex(chain::ProteinChain, i)
             value
         end
     end
-    return ProteinChain(args...; kwargs...)
+    return ProteinChain(args...; kws...)
 end
 
 Base.summary(chain::ProteinChain) = "$(length(chain))-residue $(typeof(chain)) ($(chain.id))"

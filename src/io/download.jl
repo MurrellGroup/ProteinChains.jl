@@ -20,7 +20,7 @@ function manage_cache()
 end
 
 """
-    pdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
+    pdbentry(pdbid::AbstractString; format=MMCIFFormat, kws...)
 
 Keyword arguments get propagated to [`BioStructures.downloadpdb`](https://biojulia.dev/BioStructures.jl/stable/api/#BioStructures.downloadpdb-Tuple{AbstractString})
 
@@ -50,15 +50,15 @@ julia> pdb"1EYE"1 # integer suffix to specify "ba_number" keyword
  256-residue ProteinChain{Float64} (A-2)
 ```
 """
-function pdbentry(pdbid::AbstractString; dir=nothing, format=MMCIFFormat, kwargs...)
-    isnothing(dir) && return cachedpdbentry(pdbid; format, kwargs...)
-    path = BioStructures.downloadpdb(pdbid; dir, format, kwargs...)
+function pdbentry(pdbid::AbstractString; dir=nothing, format=MMCIFFormat, kws...)
+    isnothing(dir) && return cachedpdbentry(pdbid; format, kws...)
+    path = BioStructures.downloadpdb(pdbid; dir, format, kws...)
     return read(path, ProteinStructure, format)
 end
 
-function cachedpdbentry(pdbid::AbstractString; format=MMCIFFormat, kwargs...)
+function cachedpdbentry(pdbid::AbstractString; format=MMCIFFormat, kws...)
     initialize_cache_dir()
-    structure = pdbentry(pdbid; dir=CACHE_DIR[], format, kwargs...)
+    structure = pdbentry(pdbid; dir=CACHE_DIR[], format, kws...)
     manage_cache()
     return structure
 end
@@ -75,15 +75,15 @@ macro pdb_str(pdbid::AbstractString, ba_number::Integer)
     :(pdbentry($(esc(pdbid)), ba_number=$ba_number))
 end
 
-function getmmcifdict(pdbid::AbstractString; dir=nothing, kwargs...)
-    isnothing(dir) && return cachedmmcifdict(pdbid; kwargs...)
-    path = BioStructures.downloadpdb(pdbid; dir, format=MMCIFFormat, kwargs...)
+function getmmcifdict(pdbid::AbstractString; dir=nothing, kws...)
+    isnothing(dir) && return cachedmmcifdict(pdbid; kws...)
+    path = BioStructures.downloadpdb(pdbid; dir, format=MMCIFFormat, kws...)
     return MMCIFDict(path)
 end
 
-function cachedmmcifdict(pdbid::AbstractString; kwargs...)
+function cachedmmcifdict(pdbid::AbstractString; kws...)
     initialize_cache_dir()
-    mmcifdict = getmmcifdict(pdbid; dir=CACHE_DIR[], kwargs...)
+    mmcifdict = getmmcifdict(pdbid; dir=CACHE_DIR[], kws...)
     manage_cache()
     return mmcifdict
 end

@@ -94,7 +94,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinChain{T}}) where T
     args = Iterators.map(Iterators.filter(in(properties), fields)) do name
         readproperty(Lazy{ProteinChain{T}}(group), Val(name))
     end
-    kwargs = if haskey(group, "properties")
+    kws = if haskey(group, "properties")
         # v0.5 compat
         merge(readproperty(Lazy{ProteinChain{T}}(group), Val(:properties)), (; ins_codes=Indexable(collect(readproperty(Lazy{ProteinChain{T}}(group), Val(:ins_codes))))))
     else
@@ -102,7 +102,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinChain{T}}) where T
             name => readproperty(Lazy{ProteinChain{T}}(group), Val(name))
         end
     end
-    return ProteinChain(args...; kwargs...)
+    return ProteinChain(args...; kws...)
 end
 
 ## structure
@@ -141,7 +141,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinStructure{T}}) where T
     args = Iterators.map(Iterators.filter(in(properties), fields)) do name
         readproperty(Lazy{ProteinStructure{T}}(group), Val(name))
     end
-    kwargs = if haskey(group, "properties")
+    kws = if haskey(group, "properties")
         # v0.5 compat
         #@warn "Reading deprecated ProteinStructureStore file format version. Please reserialize the data to a new file."
         readproperty(Lazy{ProteinStructure{T}}(group), Val(:properties))
@@ -150,7 +150,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinStructure{T}}) where T
             name => readproperty(Lazy{ProteinStructure{T}}(group), Val(name))
         end
     end
-    return ProteinStructure(args...; kwargs...)
+    return ProteinStructure(args...; kws...)
 end
 
 Base.read(group::HDF5.Group, ::Type{ProteinStructure}) = read(group, ProteinStructure{eval(Symbol(read(HDF5.attributes(group)["T"])))})

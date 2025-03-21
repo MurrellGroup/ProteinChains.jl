@@ -61,8 +61,8 @@ function Base.read(
     return ProteinStructure(basename(path), mmcifdict)
 end
 
-Base.read(path::AbstractString, P::Type{ProteinStructure}, ::Type{PDBFormat}; kwargs...) = P(read(path, PDBFormat); kwargs...)
-Base.read(path::AbstractString, P::Type{ProteinStructure}; kwargs...) = read(path, P, get_format(path); kwargs...)
+Base.read(path::AbstractString, P::Type{ProteinStructure}, ::Type{PDBFormat}; kws...) = P(read(path, PDBFormat); kws...)
+Base.read(path::AbstractString, P::Type{ProteinStructure}; kws...) = read(path, P, get_format(path); kws...)
 
 readcif(path::AbstractString) = read(path, ProteinStructure, MMCIFFormat)
 readpdb(path::AbstractString) = read(path, ProteinStructure, PDBFormat)
