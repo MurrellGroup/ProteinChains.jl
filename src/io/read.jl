@@ -23,14 +23,17 @@ function get_atoms(::Type{Atom{T}}, residues::Vector{BioStructures.AbstractResid
     return atoms
 end
 
-function ProteinChain(chain::BioStructures.Chain)
+function ProteinChain(
+    chain::BioStructures.Chain;
+    properties=(; ins_codes=BioStructures.inscode)
+)
     residues = BioStructures.collectresidues(chain, backbone_residue_selector)
     return ProteinChain(
         BioStructures.chainid(chain),
         get_atoms(Atom{Float64}, residues),
         get_sequence(residues),
-        map(BioStructures.resnumber, residues),
-        join(map(BioStructures.inscode, residues))
+        map(BioStructures.resnumber, residues);
+        (p => Indexable(map(f, residues)) for (p, f) in pairs(properties))...
     )
 end
 

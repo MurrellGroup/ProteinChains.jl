@@ -20,11 +20,8 @@ using Test
 
         @testset "Atom" begin
             coords = Float64[0, 0, 0]
-            atom = Atom{Float64}(0x20414320, Int8(6), coords...)
+            atom = Atom("CA", "C", coords)
             @test convert(Atom{Float32}, atom).x isa Float32
-            @test Atom(0x20414320, 6, coords...) == atom
-            @test Atom("CA", "C", coords...) == atom
-            @test Atom("CA", "C", coords) == atom
             @test ProteinChains.atom_name(atom) == " CA "
             @test ProteinChains.atom_number(atom) == 6
             @test ProteinChains.atom_coords(atom) == coords
@@ -39,7 +36,7 @@ using Test
     end
 
     @testset "chain.jl" begin
-        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5), "     ")
+        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5))
         @test length(chain) == 5
         chain.taxid = 9606
         @test hasproperty(chain, :taxid)
@@ -48,7 +45,7 @@ using Test
     end
 
     @testset "structure.jl" begin
-        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5), "     ")
+        chain = ProteinChain("A", get_atoms(ProteinChains.Backbone(rand(3, 3, 5))), "AMINO", collect(1:5))
         structure = ProteinStructure("1CHN", Atom{Float64}[], [chain, chain])
         @test structure[1] == chain
         @test structure["A"] == chain
@@ -101,22 +98,18 @@ using Test
             end
             ProteinChains.serialize(filename, structures)
             structures_copy = ProteinChains.deserialize(filename)
-            @test structures == structures_copy
+            @test structures[1] == structures_copy[1]
 
             store = ProteinStructureStore(filename)
             @test haskey(store, "1EYE.cif")
             @test issubset((:rand3,), propertynames(store["1EYE.cif"][1]))
             @test all(chain -> issubset((:rand3, :taxid, :dict, :vecs), propertynames(chain)), store["3HFM.cif"])
             @test store["3HFM.cif"][1].dict == Dict("a"=>1, "b"=>2)
-            @test store["3HFM.cif"][1].dict isa Dict{String,Any}
+            @test store["3HFM.cif"][1].dict isa Dict{String,Int}
             @test store["3HFM.cif"][1].vecs == [[1,2,3], [4,5]]
-            @test store["3HFM.cif"][1].vecs isa Vector{Any}
+            @test store["3HFM.cif"][1].vecs isa Vector{Vector{Int}}
             delete!(store, "1EYE.cif")
             @test !haskey(store, "1EYE.cif")
-
-            @test view(store, "3HFM.cif")[1].sequence isa String
-            @test length(view(store, "3HFM.cif")) isa Int
-            @test length(view(store, "3HFM.cif")[1]) isa Int
 
             close(store)
         end

@@ -2,46 +2,29 @@
     ProteinChain{T<:Real}
 
 Represents a protein chain with a basic set of fields from which some other properties might be derived.
-
-## Fields
-- `id::String`: Identifier for the protein chain.
-- `atoms::Vector{Vector{Atom{T}}}`: List of atoms in each residue.
-- `sequence::String`: Amino acid sequence of the protein.
-- `numbering::Vector{Int}`: Residue numbering (author).
-- `ins_codes::String`: Insertion codes for each residue.
-```
 """
 @dynamic mutable struct ProteinChain{T<:Real}
     id::String
     atoms::Vector{Vector{Atom{T}}}
     sequence::String
     numbering::Vector{Int}
-    ins_codes::String
 end
 
-function ProteinChain(
-    id, atoms, sequence,
-    numbering=collect(1:length(atoms)),
-    ins_codes=' '^length(sequence);
-    kwargs...
-)
-    ProteinChain(id, atoms, sequence, numbering, ins_codes; kwargs...)
-end
+ProteinChain(id, atoms, sequence; kws...) = ProteinChain(id, atoms, sequence, collect(1:length(atoms)); kws...)
 
 function Base.convert(::Type{ProteinChain{T}}, chain::ProteinChain) where T
     ProteinChain(
         chain.id,
         convert(Vector{Vector{Atom{T}}}, chain.atoms),
         chain.sequence,
-        chain.numbering,
-        chain.ins_codes;
+        chain.numbering;
         propertypairs(chain, NoFields)...)
 end
 
 Base.length(chain::ProteinChain) = length(chain.atoms)
 
 function Base.getindex(chain::ProteinChain, i)
-    args = (chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i], chain.ins_codes[i])
+    args = chain.id, chain.atoms[i], chain.sequence[i], chain.numbering[i]
     kwargs = Iterators.map(propertypairs(chain, NoFields)) do (name, value)
         name => if value isa AbstractProperty
             checkproperty(chain, value)

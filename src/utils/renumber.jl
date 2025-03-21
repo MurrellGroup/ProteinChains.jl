@@ -3,7 +3,7 @@ tryparse_fallback(type, str, fallback=type(-1)) = let x = tryparse(type, str)
 end
 
 function renumber(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
-    id, _ = split(chain.id, '-')
+    id = split(chain.id, '-')[1]
 
     label_seq_ids = mmcif_dict["_atom_site.label_seq_id"]
     pdbx_PDB_ins_codes = mmcif_dict["_atom_site.pdbx_PDB_ins_code"]
@@ -32,7 +32,7 @@ function renumber(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
 
     renumbering = map(
         (num, ins_code) -> tryparse_fallback(Int32, get(label_seq_id_dict, (num, ins_code), "-1")),
-        chain.numbering, chain.ins_codes)
+        chain.numbering, unwrap(chain.ins_codes))
 
     return renumbering
 end

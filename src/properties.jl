@@ -3,6 +3,8 @@ abstract type AbstractProperty end
 unwrap(x) = x
 unwrap(p::AbstractProperty) = p.value
 
+Base.:(==)(p1::T, p2::T) where T<:AbstractProperty = unwrap(p1) == unwrap(p2)
+
 function Base.show(io::IO, ::MIME"text/plain", p::AbstractProperty)
     print(io, typeof(p), " wrapping a ", typeof(p.value).name.name, Base.text_colors[:black], " (get value with `unwrap(x)`)", Base.text_colors[:normal])
 end

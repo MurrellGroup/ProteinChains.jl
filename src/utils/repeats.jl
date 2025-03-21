@@ -1,24 +1,5 @@
 using Graphs
 
-function writeproperty(lazy::Lazy{<:ProteinStructure}, ::Val{:repeats}, graph::SimpleGraph)
-    repeats_group = HDF5.create_group(lazy.group, "repeats")
-    repeats_group["nv"] = nv(graph)
-    repeats_group["src"] = src.(edges(graph))
-    repeats_group["dst"] = dst.(edges(graph))
-end
-
-function readproperty(lazy::Lazy, ::Val{:repeats})
-    repeats_group = lazy.group["repeats"]
-    nv = read(repeats_group, "nv")
-    src = read(repeats_group, "src")
-    dst = read(repeats_group, "dst")
-    graph = SimpleGraph(nv)
-    for (s, d) in zip(src, dst)
-        add_edge!(graph, s, d)
-    end
-    return graph
-end
-
 function residue_mapping(master::ProteinChain, target::ProteinChain)
     master_map = Dict(master.numbering .=> 1:length(master.sequence))
     target_map = Dict(target.numbering .=> 1:length(target.sequence))

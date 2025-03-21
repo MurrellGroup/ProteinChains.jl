@@ -12,11 +12,35 @@ function pad_atom_name(name::AbstractString, element_symbol::AbstractString)
     rpad(" "^(2-length(strip(element_symbol)))*strip(name), 4)
 end
 
-encode_atom_name(name::AbstractString, element_symbol::AbstractString) = reinterpret(UInt32, codeunits(pad_atom_name(name, element_symbol)))[1]
-decode_atom_name(name::UInt32) = String(reinterpret(UInt8, [name]))
+using BitIntegers
+
+BitIntegers.@define_integers 24
+
+primitive type AtomName 24 end
+
+function Base.convert(::Type{AtomName}, name::AbstractString)
+    x = zero(UInt24)
+    for (i, c) in enumerate(codeunits(name))
+        x |= ((c - 0x20) % UInt24) << (6 * (i - 1))
+    end
+    reinterpret(AtomName, x)
+end
+
+function Base.convert(::Type{String}, name::AtomName)
+    x = reinterpret(UInt24, name)
+    cs = Vector{UInt8}(undef, 4)
+    for i in 1:4
+        cs[i] = x & 0b111111 + 0x20
+        x >>= 6
+    end
+    String(cs)
+end
+
+encode_atom_name(name::AbstractString, element_symbol::AbstractString) = convert(AtomName, pad_atom_name(name, element_symbol))
+decode_atom_name(name::AtomName) = convert(String, name)
 
 struct Atom{T<:Real}
-    name::UInt32
+    name::AtomName
     number::Int8
     x::T
     y::T
@@ -25,7 +49,7 @@ end
 
 Base.convert(::Type{Atom{T}}, atom::Atom) where T = Atom{T}(atom.name, atom.number, atom.x, atom.y, atom.z)
 
-@inline Atom(name::UInt32, number::Integer, x::T, y::T, z::T) where T = Atom{T}(name, number, x, y, z)
+@inline Atom(name::AtomName, number::Integer, x::T, y::T, z::T) where T = Atom{T}(name, number, x, y, z)
 @inline Atom(name::AbstractString, element_symbol::AbstractString, x, y, z) =
     Atom(encode_atom_name(name, element_symbol), element_symbol_to_number(element_symbol), x, y, z)
 

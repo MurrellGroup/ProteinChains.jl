@@ -59,10 +59,14 @@ function writeproperty(lazy::Lazy{ProteinChain{T}}, ::Val{:atoms}, atoms::Vector
     write(atoms_group, "atoms_flattened", reduce(vcat, atoms; init=Atom{T}[]))
 end
 
+new_name(name::UInt32) = convert(ProteinChains.AtomName, String(reinterpret(UInt8, [name])))
+
 function readproperty(lazy::Lazy{ProteinChain{T}}, ::Val{:atoms}) where T
     atoms_group = lazy.group["atoms"]
     atom_chunk_sizes = read(atoms_group["atom_chunk_sizes"])
-    atoms_flattened = collect(reinterpret(Atom{T}, read(atoms_group["atoms_flattened"])))
+    atoms_flattened = map(read(atoms_group["atoms_flattened"])) do atom
+        Atom(new_name(atom.name), atom.number, atom.x, atom.y, atom.z)
+    end
     return [atoms_flattened[i-k+1:i] for (i, k) in zip(Iterators.accumulate(+, atom_chunk_sizes; init=0), atom_chunk_sizes)]
 end
 
@@ -92,7 +96,7 @@ function Base.read(group::HDF5.Group, ::Type{ProteinChain{T}}) where T
     end
     kwargs = if haskey(group, "properties")
         # v0.5 compat
-        readproperty(Lazy{ProteinChain{T}}(group), Val(:properties))
+        merge(readproperty(Lazy{ProteinChain{T}}(group), Val(:properties)), (; ins_codes=Indexable(collect(readproperty(Lazy{ProteinChain{T}}(group), Val(:ins_codes))))))
     else
         Iterators.map(setdiff(properties, fields)) do name
             name => readproperty(Lazy{ProteinChain{T}}(group), Val(name))

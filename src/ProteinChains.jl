@@ -31,7 +31,7 @@ export pdbentry, @pdb_str, @mmcifdict_str
 export getmmcif, mapmmcif
 export BioStructures, MMCIFDict, PDBFormat, MMCIFFormat
 
-include("store/store.jl")
+include("store.jl")
 export ProteinStructureStore
 @compat public serialize, deserialize
 
@@ -41,5 +41,7 @@ export IdealResidue, STANDARD_RESIDUE
 export append_residue, prepend_residue
 
 include("utils/utils.jl")
+
+include("deprecated/deprecated.jl")
 
 end

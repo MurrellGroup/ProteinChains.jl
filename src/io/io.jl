@@ -1,7 +1,7 @@
 using BioStructures: BioStructures, MMCIFDict, PDBFormat, MMCIFFormat, downloadpdb
 
 const ProteinFileFormat = Union{PDBFormat, MMCIFFormat}
-const AMINOACIDS = Set("ACDEFGHIKLMNPQRSTVWY")
+const AMINOACIDS = Set("XACDEFGHIKLMNPQRSTVWY")
 const BACKBONE_ATOM_NAMES = ["N", "CA", "C"]
 const BACKBONE_ATOM_SYMBOLS = ["N", "C", "C"]
 
