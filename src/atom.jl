@@ -5,7 +5,7 @@ const ELEMENT_SYMBOL_TO_NUMBER = Dict(uppercase(elements[number].symbol) => numb
 const NUMBER_TO_ELEMENT_SYMBOL = Dict(n => s for (s, n) in ELEMENT_SYMBOL_TO_NUMBER)
 
 element_symbol_to_number(element_symbol::AbstractString) = get(ELEMENT_SYMBOL_TO_NUMBER, uppercase(strip(element_symbol)), 0)
-number_to_element_symbol(number::Integer) = NUMBER_TO_ELEMENT_SYMBOL[number]
+number_to_element_symbol(number::Integer) = get(NUMBER_TO_ELEMENT_SYMBOL, number, "X")
 
 function pad_atom_name(name::AbstractString, element_symbol::AbstractString)
     length(name) == 4 && return name
