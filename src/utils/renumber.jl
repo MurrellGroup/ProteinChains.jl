@@ -1,6 +1,4 @@
-tryparse_fallback(type, str, fallback=type(-1)) = let x = tryparse(type, str)
-    isnothing(x) ? fallback : x
-end
+tryparse_fallback(T, str, fallback=T(-1)) = something(tryparse(T, str), fallback)
 
 function renumber(chain::ProteinChain, mmcif_dict::BioStructures.MMCIFDict)
     id = split(chain.id, '-')[1]
