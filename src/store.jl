@@ -1,10 +1,14 @@
 import JLD2
+using InlineStrings: String31
 
 """
-    ProteinStructureStore <: AbstractDict{String,ProteinStructure}
+    ProteinStructureStore <: AbstractDict{InlineStrings.String31,ProteinStructure}
 
-An JLD2-based store for protein structures implementing the `AbstractDict` interface,
+A JLD2-based store for protein structures implementing the `AbstractDict` interface,
 allowing for dictionary operations on the stored structures.
+
+Keys are stored as `InlineStrings.String31` objects to reduce references.
+This means keys are limited to 31 bytes.
 
 A `ProteinStructureStore` gets closed automatically when there no longer exists a program-accessible reference to it.
 
@@ -25,8 +29,8 @@ julia> store
 ProteinStructureStore with 1 entry
 
 julia> keys(store)
-Set{String} with 1 element:
-  "3HFM"
+Set{InlineStrings.String31} with 1 element:
+  InlineStrings.String31("3HFM")
 
 julia> delete!(store, "3HFM")
 ProteinStructureStore with 0 entries
@@ -35,7 +39,7 @@ ProteinStructureStore with 0 entries
 mutable struct ProteinStructureStore <: AbstractDict{String,ProteinStructure}
     filename::String
     file::JLD2.JLDFile
-    keys::Set{String}
+    keys::Set{String31}
     mode::String
 end
 
@@ -72,7 +76,7 @@ function Base.setindex!(store::ProteinStructureStore, value::ProteinStructure, k
 end
 
 function Base.iterate(store::ProteinStructureStore, state...)
-    iterate_step((key,state)::Tuple{String,Int}) = (key => store[key], state)
+    iterate_step((key,state)::Tuple{AbstractString,Int}) = (key => store[key], state)
     iterate_step(::Nothing) = nothing
     return iterate_step(iterate(keys(store), state...))
 end
