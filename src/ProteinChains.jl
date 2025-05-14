@@ -41,6 +41,8 @@ export IdealResidue, STANDARD_RESIDUE
 export append_residue, prepend_residue
 
 include("utils/utils.jl")
+include("masks.jl")
+export masked_out_structure
 
 include("deprecated/deprecated.jl")
 
