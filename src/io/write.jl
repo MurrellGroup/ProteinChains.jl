@@ -1,6 +1,6 @@
 using LinearAlgebra: cross, normalize
 
-_normalize(A::AbstractArray; dims=1) = mapslices(normalize, A; dims)
+_normalize(A::AbstractArray; dims=1) = isempty(A) ? A : mapslices(normalize, A; dims)
 
 function estimate_last_oxygen_position(backbone::Array{T,3}) where T<:Real
     N_pos, Ca_pos, C_pos = eachcol(backbone[:,:,end])
