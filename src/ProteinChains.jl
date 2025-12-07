@@ -44,6 +44,9 @@ include("utils/utils.jl")
 include("masks.jl")
 export masked_out_structure
 
+include("utils/chain_properties.jl")
+export shape_features, cysteine_features, residue_pair_min_distances, residue_contact_order, interchain_residue_contact_proportion, atom_contact_order, interchain_atom_contact_proportion
+
 include("deprecated/deprecated.jl")
 
 end
